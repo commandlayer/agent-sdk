@@ -1,4 +1,5 @@
 import { createReceipt, type Receipt } from "./receipt.js";
+import type { JsonValue } from "./canonicalize.js";
 
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
@@ -24,7 +25,10 @@ export interface WrapResult<TOutput> {
 export class CommandLayer {
   constructor(private readonly config: CommandLayerConfig) {}
 
-  async wrap<TOutput>(verb: string, params: WrapParams<TOutput>): Promise<WrapResult<TOutput>> {
+  async wrap<TOutput extends JsonValue>(
+    verb: string,
+    params: { input: JsonValue; run: () => Promise<TOutput> },
+  ): Promise<Receipt> {
     if (!this.config.privateKeyPem) {
       throw new Error("CommandLayer privateKeyPem is required for signing");
     }
@@ -34,7 +38,7 @@ export class CommandLayer {
 
     try {
       const output = await params.run();
-      const completedAt = new Date().toISOString();
+      const duration = Date.now() - started;
 
       const receipt = await createReceipt({
         keyId: this.config.keyId,
@@ -43,15 +47,10 @@ export class CommandLayer {
         input: {
           signer: this.config.signer,
           verb,
-          ts: completedAt,
-          input: params.input as never,
-          output: output as never,
-          execution: {
-            status: "ok",
-            duration_ms: Date.now() - startedMs,
-            started_at: startedAt,
-            completed_at: completedAt,
-          },
+          ts: new Date().toISOString(),
+          input: params.input,
+          output,
+          execution: { status: "ok", duration_ms: duration },
         },
       });
 
@@ -65,8 +64,8 @@ export class CommandLayer {
         input: {
           signer: this.config.signer,
           verb,
-          ts: completedAt,
-          input: params.input as never,
+          ts: new Date().toISOString(),
+          input: params.input,
           output: { ok: false, error: "agent_error" },
           execution: {
             status: "error",

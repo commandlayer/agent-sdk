@@ -16,7 +16,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "node --test dist/test/receipt.test.js"
+    "test": "node --test dist/test/receipt.test.js",
+    "pretest": "npm run build",
+    "example:basic": "node dist/examples/basic-agent.js",
+    "example:langchain": "node dist/examples/langchain-agent.js"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
