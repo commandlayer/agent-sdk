@@ -10,6 +10,8 @@ export interface ReceiptInput {
   execution: {
     status: "ok" | "error";
     duration_ms: number;
+    started_at: string;
+    completed_at: string;
     error?: string;
   };
 }
