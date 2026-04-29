@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
 import { CommandLayer } from "../src/index.js";
 import { canonicalize } from "../src/canonicalize.js";
@@ -19,36 +20,36 @@ async function generatePrivateKeyPem(): Promise<string> {
   return toPem(pkcs8);
 }
 
-test("generated receipt has required fields and hash", async () => {
+test("wrapping an action creates a receipt with required fields", async () => {
   const cl = new CommandLayer({
-    signer: "runtime.commandlayer.eth",
-    keyId: "vC4WbcNoq2znSCiQ",
+    signer: "verifyagent.eth",
+    keyId: "v1",
     canonicalization: "json.sorted_keys.v1",
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
-  const receipt = await cl.wrap("agent.execute", {
-    input: { task: "summarize", content: "hello world" },
-    run: async () => ({ summary: "hello" }),
+  const result = await cl.wrap("summarize", {
+    input: { content: "hello world" },
+    run: async () => "hello world",
   });
 
-  assert.equal(receipt.signer, "runtime.commandlayer.eth");
-  assert.equal(receipt.verb, "agent.execute");
-  assert.ok(receipt.ts);
-  assert.ok(receipt.metadata.proof.hash_sha256.length > 0);
-  assert.equal(receipt.signature.alg, "ed25519");
-  assert.match(receipt.signature.sig, /^[A-Za-z0-9+/=]+$/);
+  assert.equal(result.output, "hello world");
+  assert.equal(result.receipt.verb, "summarize");
+  assert.ok(result.receipt.metadata.proof.hash_sha256.length > 0);
+  assert.ok(result.receipt.signature.sig.length > 0);
+  assert.ok(result.receipt.execution.started_at);
+  assert.ok(result.receipt.execution.completed_at);
 });
 
 test("canonical payload excludes metadata and signature", async () => {
   const cl = new CommandLayer({
-    signer: "runtime.commandlayer.eth",
-    keyId: "kid123",
+    signer: "verifyagent.eth",
+    keyId: "v1",
     canonicalization: "json.sorted_keys.v1",
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
-  const receipt = await cl.wrap("agent.execute", {
+  const { receipt } = await cl.wrap("summarize", {
     input: { x: 1 },
     run: async () => ({ y: 2 }),
   });
@@ -57,11 +58,47 @@ test("canonical payload excludes metadata and signature", async () => {
   assert.equal("metadata" in canonicalPayload, false);
   assert.equal("signature" in canonicalPayload, false);
 
-  const canonical = canonicalize(canonicalPayload);
-  const recomputedHash = await sha256Hex(canonical);
+  const recomputedHash = await sha256Hex(canonicalize(canonicalPayload));
   assert.equal(recomputedHash, receipt.metadata.proof.hash_sha256);
 
-  const tamperedPayload = { ...canonicalPayload, output: { y: 3 } };
+  const tamperedPayload = { ...canonicalPayload, output: { y: 99 } };
   const tamperedHash = await sha256Hex(canonicalize(tamperedPayload));
   assert.notEqual(tamperedHash, receipt.metadata.proof.hash_sha256);
+});
+
+test("verification helper posts to verifierUrl", async () => {
+  let requestBody = "";
+  const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+    req.on("data", (chunk: Buffer) => {
+      requestBody += chunk;
+    });
+    req.on("end", () => {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ ok: true }));
+    });
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const verifierUrl = `http://127.0.0.1:${address.port}/api/verify`;
+
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "v1",
+    canonicalization: "json.sorted_keys.v1",
+    privateKeyPem: await generatePrivateKeyPem(),
+    verifierUrl,
+  });
+
+  const { receipt } = await cl.wrap("summarize", {
+    input: { content: "hello" },
+    run: async () => "hello",
+  });
+
+  const verification = await cl.verify(receipt);
+  assert.deepEqual(verification, { ok: true });
+  assert.deepEqual(JSON.parse(requestBody), receipt);
+
+  server.close();
 });
