@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { CommandLayer } from "../src/index.js";
 
 const chain = {
@@ -5,6 +6,12 @@ const chain = {
     return { text: `Mocked response for: ${input.prompt}` };
   },
 };
+
+if (!process.env.CL_PRIVATE_KEY_PEM) {
+  throw new Error(
+    "Missing CL_PRIVATE_KEY_PEM. Copy .env.example to .env and add a PKCS8 Ed25519 private key.",
+  );
+}
 
 const cl = new CommandLayer({
   signer: process.env.CL_RECEIPT_SIGNER ?? "runtime.commandlayer.eth",
