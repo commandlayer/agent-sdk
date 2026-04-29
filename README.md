@@ -10,32 +10,33 @@ Wrap one function. Emit proof. Verify anywhere.
 
 Agent runs → receipt is signed → anyone can verify → tampering breaks it.
 
-Agents don’t make claims — they produce proof.
-
-Verification endpoint: https://www.commandlayer.org/verify.html
-
-## Install (local for now)
+## Install (local repo)
 
 ```bash
 npm install
+npm run build
 ```
+
+## Environment setup
+
+```bash
+cp .env.example .env
+```
+
+Then set your signer + Ed25519 PKCS8 private key PEM in `.env`.
+
+## Run examples
+
+```bash
+npm run example:basic
+npm run example:langchain
+```
+
+Paste output into:
+
+https://www.commandlayer.org/verify.html
 
 ## Quick start
-
-### 1) Environment setup
-
-Copy `.env.example` and set your signer + Ed25519 PKCS8 private key PEM:
-
-```env
-CL_RECEIPT_SIGNER=runtime.commandlayer.eth
-CL_KEY_ID=vC4WbcNoq2znSCiQ
-CL_CANONICAL_ID=json.sorted_keys.v1
-CL_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----
-...
------END PRIVATE KEY-----"
-```
-
-### 2) Basic usage
 
 ```ts
 import { CommandLayer } from "@commandlayer/agent-sdk";
@@ -79,30 +80,9 @@ console.log(receipt);
 }
 ```
 
-## Signing behavior
-
-- Canonicalize sorted JSON payload.
-- Hash canonical payload with SHA-256.
-- Sign the hash hex string with Ed25519.
-- Attach base64 signature.
-
-Canonical payload includes only:
-
-```json
-{
-  "signer": "...",
-  "verb": "...",
-  "input": {},
-  "output": {},
-  "execution": {},
-  "ts": "..."
-}
-```
-
 ## Development
 
 ```bash
-npm run build
 npm test
 ```
 
