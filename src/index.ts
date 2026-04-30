@@ -4,11 +4,15 @@ import type { JsonValue } from "./canonicalize.js";
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
 
+const DEFAULT_VERIFIER_URL = "https://www.commandlayer.org/api/verify";
+
 export interface CommandLayerConfig {
-  signer: string;
+  signer?: string;
+  agent?: string;
   keyId: string;
-  canonicalization: string;
+  canonicalization?: string;
   privateKeyPem?: string;
+  privateKey?: string;
   verifierUrl?: string;
 }
 
@@ -34,6 +38,7 @@ export class CommandLayer {
     };
   }
 
+  async wrap<TOutput extends JsonValue>(verb: string, run: () => Promise<TOutput>): Promise<WrapResult<TOutput>>;
   async wrap<TOutput extends JsonValue>(
     verb: string,
     params: { input: JsonValue; run: () => Promise<TOutput> },
@@ -45,6 +50,11 @@ export class CommandLayer {
     const startedAt = new Date().toISOString();
     const startedMs = Date.now();
 
+    const params =
+      typeof paramsOrRun === "function"
+        ? ({ input: null, run: paramsOrRun } as const)
+        : paramsOrRun;
+
     try {
       const output = await params.run();
       const completedAt = new Date().toISOString();
@@ -52,10 +62,10 @@ export class CommandLayer {
 
       const receipt = await createReceipt({
         keyId: this.config.keyId,
-        privateKeyPem: this.config.privateKeyPem,
-        canonicalization: this.config.canonicalization,
+        privateKeyPem: this.privateKeyPem,
+        canonicalization: this.canonicalization,
         input: {
-          signer: this.config.signer,
+          signer: this.signer,
           verb,
           ts: new Date().toISOString(),
           input: params.input,
@@ -69,10 +79,10 @@ export class CommandLayer {
       const completedAt = new Date().toISOString();
       const receipt = await createReceipt({
         keyId: this.config.keyId,
-        privateKeyPem: this.config.privateKeyPem,
-        canonicalization: this.config.canonicalization,
+        privateKeyPem: this.privateKeyPem,
+        canonicalization: this.canonicalization,
         input: {
-          signer: this.config.signer,
+          signer: this.signer,
           verb,
           ts: new Date().toISOString(),
           input: params.input,

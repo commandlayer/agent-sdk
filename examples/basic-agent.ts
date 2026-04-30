@@ -6,22 +6,24 @@ async function fakeSummarizeAgent(content: string) {
 }
 
 if (!process.env.CL_PRIVATE_KEY_PEM) {
-  console.error(
-    "Missing CL_PRIVATE_KEY_PEM. Copy .env.example to .env and add a PKCS8 Ed25519 private key.",
-  );
+  console.error("Missing CL_PRIVATE_KEY_PEM. Copy .env.example to .env and add a PKCS8 Ed25519 private key.");
   process.exit(1);
 }
 
 const cl = new CommandLayer({
-  signer: process.env.CL_RECEIPT_SIGNER ?? "runtime.commandlayer.eth",
-  keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
-  canonicalization: process.env.CL_CANONICAL_ID ?? "json.sorted_keys.v1",
-  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  agent: process.env.CL_RECEIPT_SIGNER ?? "runtime.commandlayer.eth",
+  keyId: process.env.CL_KEY_ID ?? "v1",
+  privateKey: process.env.CL_PRIVATE_KEY_PEM,
+  verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 
-const receipt = await cl.wrap("agent.execute", {
-  input: { task: "summarize", content: "hello world" },
+const result = await cl.wrap("summarize", {
+  input: { content: "hello world" },
   run: async () => fakeSummarizeAgent("hello world"),
 });
 
-console.log(JSON.stringify(receipt, null, 2));
+console.log("output", result.output);
+console.log("receipt", JSON.stringify(result.receipt, null, 2));
+
+const verified = await cl.verify(result.receipt);
+console.log("verified", verified);
