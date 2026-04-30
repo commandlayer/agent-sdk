@@ -74,9 +74,7 @@ export class CommandLayer {
       typeof fnOrOptions === "function" ? fnOrOptions : fnOrOptions.run;
 
     const input =
-      typeof fnOrOptions === "function"
-        ? {}
-        : fnOrOptions.input ?? {};
+      typeof fnOrOptions === "function" ? {} : fnOrOptions.input ?? {};
 
     const startedMs = Date.now();
     const startedAt = new Date().toISOString();
