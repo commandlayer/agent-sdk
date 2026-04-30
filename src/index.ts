@@ -19,7 +19,7 @@ export interface WrapParams<TOutput> {
   run: () => Promise<TOutput>;
 }
 
-export interface WrapResult<TOutput> {
+export interface WrapResult<TOutput = unknown> {
   output: TOutput;
   receipt: Receipt;
 }
@@ -34,13 +34,21 @@ export class CommandLayer {
     };
   }
 
+  async wrap<TOutput extends JsonValue>(verb: string, run: () => Promise<TOutput>): Promise<WrapResult<TOutput>>;
   async wrap<TOutput extends JsonValue>(
     verb: string,
     params: { input: JsonValue; run: () => Promise<TOutput> },
+  ): Promise<WrapResult<TOutput>>;
+  async wrap<TOutput extends JsonValue>(
+    verb: string,
+    runOrParams: (() => Promise<TOutput>) | { input: JsonValue; run: () => Promise<TOutput> },
   ): Promise<WrapResult<TOutput>> {
     if (!this.config.privateKeyPem) {
       throw new Error("CommandLayer privateKeyPem is required for signing");
     }
+
+    const params =
+      typeof runOrParams === "function" ? { input: null, run: runOrParams } : runOrParams;
 
     const startedAt = new Date().toISOString();
     const startedMs = Date.now();
