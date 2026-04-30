@@ -1,9 +1,9 @@
-import test from "node:test";
+import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
-import { CommandLayer } from "../src/index.js";
+import { CommandLayer, DEFAULT_VERIFIER_URL } from "../src/index.js";
 import { canonicalize } from "../src/canonicalize.js";
 import { canonicalPayloadFromReceiptInput } from "../src/receipt.js";
 import { sha256Hex } from "../src/crypto.js";
@@ -15,7 +15,10 @@ function toPem(pkcs8: ArrayBuffer): string {
 }
 
 async function generatePrivateKeyPem(): Promise<string> {
-  const keyPair = await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const keyPair = (await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, [
+    "sign",
+    "verify",
+  ])) as CryptoKeyPair;
   const pkcs8 = await webcrypto.subtle.exportKey("pkcs8", keyPair.privateKey);
   return toPem(pkcs8);
 }
@@ -99,6 +102,51 @@ test("verification helper posts to verifierUrl", async () => {
   const verification = await cl.verify(receipt);
   assert.deepEqual(verification, { ok: true });
   assert.deepEqual(JSON.parse(requestBody), receipt);
-
   server.close();
+});
+
+test("default verifierUrl is used when none is provided", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "v1",
+    canonicalization: "json.sorted_keys.v1",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  const fetchSpy = mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    assert.equal(url, DEFAULT_VERIFIER_URL);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await cl.verify({} as unknown as Parameters<CommandLayer["verify"]>[0]);
+  assert.equal(fetchSpy.mock.callCount(), 1);
+  fetchSpy.mock.restore();
+});
+
+test("custom verifierUrl overrides default", async () => {
+  const customVerifierUrl = "https://example.com/custom/verify";
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "v1",
+    canonicalization: "json.sorted_keys.v1",
+    privateKeyPem: await generatePrivateKeyPem(),
+    verifierUrl: customVerifierUrl,
+  });
+
+  const fetchSpy = mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    assert.equal(url, customVerifierUrl);
+    return new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  await cl.verify({} as unknown as Parameters<CommandLayer["verify"]>[0]);
+  assert.equal(fetchSpy.mock.callCount(), 1);
+  fetchSpy.mock.restore();
 });
