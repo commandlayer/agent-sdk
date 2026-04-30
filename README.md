@@ -60,8 +60,8 @@ All examples are dependency-free TypeScript and use:
 Examples by builder type:
 
 - **Agent frameworks**
-  - `examples/basic-js-agent.ts`
-  - `examples/langchain-wrapper.ts`
+  - `examples/basic-agent.ts`
+  - `examples/langchain-agent.ts`
 - **Tool/function calling**
   - `examples/openai-tool-wrapper.ts`
 - **Workflow automation**
@@ -75,6 +75,7 @@ Run them after build:
 
 ```bash
 npm run example:basic
+npm run example:wrapped
 npm run example:tool
 npm run example:langchain
 npm run example:workflow
