@@ -16,39 +16,35 @@ export interface CommandLayerConfig {
   verifierUrl?: string;
 }
 
+export const DEFAULT_VERIFIER_URL = "https://www.commandlayer.org/api/verify";
+
+export interface WrapParams<TOutput> {
+  input: unknown;
+  run: () => Promise<TOutput>;
+}
+
 export interface WrapResult<TOutput> {
   output: TOutput;
   receipt: Receipt;
 }
 
 export class CommandLayer {
-  private readonly signer: string;
-  private readonly privateKeyPem?: string;
-  private readonly canonicalization: string;
-  private readonly verifierUrl: string;
+  private readonly config: CommandLayerConfig;
 
-  constructor(private readonly config: CommandLayerConfig) {
-    this.signer = config.signer ?? config.agent ?? "";
-    this.privateKeyPem = config.privateKeyPem ?? config.privateKey;
-    this.canonicalization = config.canonicalization ?? "json.sorted_keys.v1";
-    this.verifierUrl = config.verifierUrl ?? DEFAULT_VERIFIER_URL;
-
-    if (!this.signer) {
-      throw new Error("CommandLayer signer (or agent) is required");
-    }
+  constructor(config: CommandLayerConfig) {
+    this.config = {
+      ...config,
+      verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
+    };
   }
 
   async wrap<TOutput extends JsonValue>(verb: string, run: () => Promise<TOutput>): Promise<WrapResult<TOutput>>;
   async wrap<TOutput extends JsonValue>(
     verb: string,
     params: { input: JsonValue; run: () => Promise<TOutput> },
-  ): Promise<WrapResult<TOutput>>;
-  async wrap<TOutput extends JsonValue>(
-    verb: string,
-    paramsOrRun: { input: JsonValue; run: () => Promise<TOutput> } | (() => Promise<TOutput>),
   ): Promise<WrapResult<TOutput>> {
-    if (!this.privateKeyPem) {
-      throw new Error("CommandLayer privateKeyPem (or privateKey) is required for signing");
+    if (!this.config.privateKeyPem) {
+      throw new Error("CommandLayer privateKeyPem is required for signing");
     }
 
     const startedAt = new Date().toISOString();
@@ -106,7 +102,7 @@ export class CommandLayer {
   }
 
   async verify(receipt: Receipt): Promise<unknown> {
-    const response = await fetch(this.verifierUrl, {
+    const response = await fetch(this.config.verifierUrl!, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(receipt),
