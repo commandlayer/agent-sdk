@@ -13,14 +13,11 @@ if (!process.env.CL_PRIVATE_KEY_PEM) {
 const cl = new CommandLayer({
   agent: process.env.CL_RECEIPT_SIGNER ?? "runtime.commandlayer.eth",
   keyId: process.env.CL_KEY_ID ?? "v1",
-  privateKey: process.env.CL_PRIVATE_KEY_PEM,
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 
-const result = await cl.wrap("summarize", {
-  input: { content: "hello world" },
-  run: async () => fakeSummarizeAgent("hello world"),
-});
+const result = await cl.wrap("summarize", async () => fakeSummarizeAgent("hello world"));
 
 console.log("output", result.output);
 console.log("receipt", JSON.stringify(result.receipt, null, 2));

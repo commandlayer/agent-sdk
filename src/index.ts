@@ -1,5 +1,4 @@
 import { createReceipt, type Receipt } from "./receipt.js";
-import type { JsonValue } from "./canonicalize.js";
 
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
@@ -35,19 +34,18 @@ export class CommandLayer {
 
   async wrap<TOutput>(
     verb: string,
-    fnOrOptions: (() => Promise<TOutput>) | { input?: any; run: () => Promise<TOutput> },
+    fn: () => Promise<TOutput>,
   ): Promise<WrapResult<TOutput>> {
     if (!this.config.privateKeyPem) {
       throw new Error("CommandLayer privateKeyPem is required for signing");
     }
 
-    const params = typeof fnOrOptions === "function" ? { input: null, run: fnOrOptions } : fnOrOptions;
-
-    const startedAt = new Date().toISOString();
     const startedMs = Date.now();
+    const startedAt = new Date().toISOString();
 
     try {
-      const output = await params.run();
+      const output = await fn();
+
       const completedAt = new Date().toISOString();
       const durationMs = Date.now() - startedMs;
 
@@ -56,11 +54,11 @@ export class CommandLayer {
         privateKeyPem: this.config.privateKeyPem,
         canonicalization: this.config.canonicalization ?? "json.sorted_keys.v1",
         input: {
-          signer: this.config.signer ?? this.config.agent ?? "unknown",
+          signer: this.config.agent ?? this.config.signer ?? "unknown",
           verb,
           ts: new Date().toISOString(),
-          input: params.input,
-          output: output as unknown as JsonValue,
+          input: {},
+          output: output as unknown as import("./canonicalize.js").JsonValue,
           execution: {
             status: "ok",
             duration_ms: durationMs,
@@ -80,11 +78,11 @@ export class CommandLayer {
         privateKeyPem: this.config.privateKeyPem,
         canonicalization: this.config.canonicalization ?? "json.sorted_keys.v1",
         input: {
-          signer: this.config.signer ?? this.config.agent ?? "unknown",
+          signer: this.config.agent ?? this.config.signer ?? "unknown",
           verb,
           ts: new Date().toISOString(),
-          input: params.input,
-          output: { ok: false, error: "agent_error" },
+          input: {},
+          output: null,
           execution: {
             status: "error",
             duration_ms: durationMs,
@@ -99,17 +97,13 @@ export class CommandLayer {
     }
   }
 
-  async verify(receipt: Receipt): Promise<unknown> {
-    const response = await fetch(this.verifierUrl, {
+  async verify(receipt: Receipt) {
+    const res = await fetch(this.config.verifierUrl!, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(receipt),
     });
 
-    if (!response.ok) {
-      throw new Error(`Verification request failed: ${response.status}`);
-    }
-
-    return response.json();
+    return res.json();
   }
 }

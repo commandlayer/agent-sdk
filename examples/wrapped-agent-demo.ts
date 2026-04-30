@@ -8,11 +8,8 @@ const cl = new CommandLayer({
   verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 
-const result = await cl.wrap("summarize", {
-  input: { content: "hello world" },
-  run: async () => {
-    return "hello world";
-  },
+const result = await cl.wrap("summarize", async () => {
+  return "hello world";
 });
 
 console.log(result.output);
