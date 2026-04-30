@@ -19,9 +19,9 @@ npm run build
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: "exampleagent.eth",
-  privateKey: process.env.CL_PRIVATE_KEY_PEM,
-  keyId: "v1",
+  agent: process.env.CL_AGENT ?? "exampleagent.eth",
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  keyId: process.env.CL_KEY_ID ?? "v1",
   verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 
@@ -41,16 +41,13 @@ console.log(result.receipt);
 
 ```ts
 const verified = await cl.verify(result.receipt);
-console.log(verified.status);
+console.log(verified);
 ```
 
-Live verifier API:
+Verifier endpoints:
 
-- `https://www.commandlayer.org/api/verify`
-
-VerifyAgent page:
-
-- https://www.commandlayer.org/verify.html
+- Default verifier API: `https://www.commandlayer.org/api/verify`
+- VerifyAgent endpoint: `https://www.commandlayer.org/api/agents/verifyagent`
 
 ## Builder integration examples
 
@@ -94,12 +91,11 @@ CommandLayer wraps the boundary around the action so your agent keeps its existi
 ```ts
 const result = await cl.wrap("agent.execute", {
   input,
-  run: () => existingAgent.run(input)
+  run: () => existingAgent.run(input),
 });
 
 const verified = await cl.verify(result.receipt);
 ```
-
 
 ## Development
 
