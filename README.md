@@ -52,6 +52,38 @@ VerifyAgent page:
 
 - https://www.commandlayer.org/verify.html
 
+## Builder integration examples
+
+All examples are dependency-free TypeScript and use:
+
+- `CL_PRIVATE_KEY_PEM`
+- `CL_KEY_ID`
+- `CL_AGENT` (defaults to `exampleagent.eth`)
+
+Examples by builder type:
+
+- **Agent frameworks**
+  - `examples/basic-js-agent.ts`
+  - `examples/langchain-wrapper.ts`
+- **Tool/function calling**
+  - `examples/openai-tool-wrapper.ts`
+- **Workflow automation**
+  - `examples/workflow-job-runner.ts`
+- **Multi-agent systems**
+  - `examples/agent-to-agent-verify.ts`
+
+Run them after build:
+
+```bash
+npm run example:basic
+npm run example:tool
+npm run example:langchain
+npm run example:workflow
+npm run example:a2a
+```
+
+See also: `docs/examples.md`.
+
 ## Development
 
 ```bash
