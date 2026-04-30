@@ -18,8 +18,11 @@
     "build": "tsc -p tsconfig.json",
     "test": "node --test dist/test/receipt.test.js",
     "pretest": "npm run build",
-    "example:basic": "node dist/examples/basic-agent.js",
-    "example:langchain": "node dist/examples/langchain-agent.js"
+    "example:basic": "node dist/examples/basic-js-agent.js",
+    "example:langchain": "node dist/examples/langchain-wrapper.js",
+    "example:tool": "node dist/examples/openai-tool-wrapper.js",
+    "example:workflow": "node dist/examples/workflow-job-runner.js",
+    "example:a2a": "node dist/examples/agent-to-agent-verify.js"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
