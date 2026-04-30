@@ -15,6 +15,8 @@ npm run build
 
 ## Wrap your agent
 
+`wrap` returns both the output and a signed receipt.
+
 ```ts
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
@@ -28,25 +30,20 @@ const cl = new CommandLayer({
 const result = await cl.wrap("summarize", async () => {
   return { summary: "hello world" };
 });
-```
 
-## Emit a signed receipt
-
-```ts
 console.log(result.output);
 console.log(result.receipt);
-```
 
-## Verify through CommandLayer
-
-```ts
 const verified = await cl.verify(result.receipt);
-console.log(verified);
+console.log(verified.status);
 ```
 
-Verifier endpoints:
+This signs the agent action and verifies it through the public CommandLayer verifier.
 
-- Default verifier API: `https://www.commandlayer.org/api/verify`
+Verifier references:
+
+- UI verifier: `https://www.commandlayer.org/verify.html`
+- API verifier: `https://www.commandlayer.org/api/verify`
 - VerifyAgent endpoint: `https://www.commandlayer.org/api/agents/verifyagent`
 
 ## Builder integration examples
