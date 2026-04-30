@@ -137,12 +137,27 @@ export class CommandLayer {
   }
 
   async verify(receipt: Receipt): Promise<unknown> {
-    const response = await fetch(this.config.verifierUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(receipt),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
 
-    return response.json();
+    try {
+      const response = await fetch(this.config.verifierUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(receipt),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const responseText = (await response.text()).slice(0, 200);
+        throw new Error(
+          `CommandLayer verify failed with status ${response.status}: ${responseText}`,
+        );
+      }
+
+      return response.json();
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 }

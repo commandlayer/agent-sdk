@@ -21,21 +21,22 @@ npm run build
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: process.env.CL_AGENT ?? "exampleagent.eth",
-  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  agent: process.env.CL_AGENT ?? "exampleagent.eth", // or: signer
   keyId: process.env.CL_KEY_ID ?? "v1",
-  verifierUrl: "https://www.commandlayer.org/api/verify",
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  verifierUrl: process.env.CL_VERIFIER_URL ?? "https://www.commandlayer.org/api/verify",
 });
 
-const result = await cl.wrap("summarize", async () => {
-  return { summary: "hello world" };
+const result = await cl.wrap("summarize", {
+  input: { content: "hello world" },
+  run: async () => ({ summary: "hello world" }),
 });
 
 console.log(result.output);
-console.log(result.receipt);
+console.log(result.receipt.metadata.proof.hash_sha256);
 
-const verified = await cl.verify(result.receipt);
-console.log(verified.status);
+const verification = await cl.verify(result.receipt);
+console.log(verification);
 ```
 
 This signs the agent action and verifies it through the public CommandLayer verifier.
