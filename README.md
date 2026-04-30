@@ -71,6 +71,8 @@ Examples by builder type:
   - `examples/workflow-job-runner.ts`
 - **Multi-agent systems**
   - `examples/agent-to-agent-verify.ts`
+- **Existing agent integration**
+  - `examples/existing-agent-integration.ts`
 
 Run them after build:
 
@@ -80,9 +82,24 @@ npm run example:tool
 npm run example:langchain
 npm run example:workflow
 npm run example:a2a
+npm run example:existing
 ```
 
 See also: `docs/examples.md`.
+
+## Already have an agent?
+
+CommandLayer wraps the boundary around the action so your agent keeps its existing logic. The SDK emits a signed receipt that can be verified publicly.
+
+```ts
+const result = await cl.wrap("agent.execute", {
+  input,
+  run: () => existingAgent.run(input)
+});
+
+const verified = await cl.verify(result.receipt);
+```
+
 
 ## Development
 
