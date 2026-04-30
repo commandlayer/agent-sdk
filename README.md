@@ -21,23 +21,25 @@ npm run build
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: process.env.CL_AGENT ?? "exampleagent.eth", // or: signer
-  keyId: process.env.CL_KEY_ID ?? "v1",
-  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
-  verifierUrl: process.env.CL_VERIFIER_URL ?? "https://www.commandlayer.org/api/verify",
+  agent: "exampleagent.eth",
+  privateKey: process.env.CL_PRIVATE_KEY_PEM,
+  keyId: "v1"
 });
 
-const result = await cl.wrap("summarize", {
-  input: { content: "hello world" },
-  run: async () => ({ summary: "hello world" }),
+const result = await cl.wrap("summarize", async () => {
+  return { summary: "hello world" };
 });
 
 console.log(result.output);
-console.log(result.receipt.metadata.proof.hash_sha256);
+console.log(result.receipt);
 
-const verification = await cl.verify(result.receipt);
-console.log(verification);
+const verified = await cl.verify(result.receipt);
+console.log(verified.status);
 ```
+
+wrap() returns both:
+- output: the value returned by your agent function
+- receipt: the signed CommandLayer receipt for that action
 
 This signs the agent action and verifies it through the public CommandLayer verifier.
 
@@ -45,7 +47,6 @@ Verifier references:
 
 - UI verifier: `https://www.commandlayer.org/verify.html`
 - API verifier: `https://www.commandlayer.org/api/verify`
-- VerifyAgent endpoint: `https://www.commandlayer.org/api/agents/verifyagent`
 
 ## Builder integration examples
 
