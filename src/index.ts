@@ -12,6 +12,8 @@ export interface CommandLayerConfig {
   verifierUrl?: string;
 }
 
+export const DEFAULT_VERIFIER_URL = "https://www.commandlayer.org/api/verify";
+
 export interface WrapParams<TOutput> {
   input: unknown;
   run: () => Promise<TOutput>;
@@ -23,12 +25,19 @@ export interface WrapResult<TOutput> {
 }
 
 export class CommandLayer {
-  constructor(private readonly config: CommandLayerConfig) {}
+  private readonly config: CommandLayerConfig;
+
+  constructor(config: CommandLayerConfig) {
+    this.config = {
+      ...config,
+      verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
+    };
+  }
 
   async wrap<TOutput extends JsonValue>(
     verb: string,
     params: { input: JsonValue; run: () => Promise<TOutput> },
-  ): Promise<Receipt> {
+  ): Promise<WrapResult<TOutput>> {
     if (!this.config.privateKeyPem) {
       throw new Error("CommandLayer privateKeyPem is required for signing");
     }
@@ -38,7 +47,8 @@ export class CommandLayer {
 
     try {
       const output = await params.run();
-      const duration = Date.now() - started;
+      const completedAt = new Date().toISOString();
+      const duration = Date.now() - startedMs;
 
       const receipt = await createReceipt({
         keyId: this.config.keyId,
@@ -50,7 +60,7 @@ export class CommandLayer {
           ts: new Date().toISOString(),
           input: params.input,
           output,
-          execution: { status: "ok", duration_ms: duration },
+          execution: { status: "ok", duration_ms: duration, started_at: startedAt, completed_at: completedAt },
         },
       });
 
@@ -77,16 +87,12 @@ export class CommandLayer {
         },
       });
 
-      return { output: undefined as TOutput, receipt };
+      return { output: undefined as unknown as TOutput, receipt };
     }
   }
 
   async verify(receipt: Receipt): Promise<unknown> {
-    if (!this.config.verifierUrl) {
-      throw new Error("CommandLayer verifierUrl is required for verify");
-    }
-
-    const response = await fetch(this.config.verifierUrl, {
+    const response = await fetch(this.config.verifierUrl!, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(receipt),
