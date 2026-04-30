@@ -48,6 +48,14 @@ Verifier references:
 - UI verifier: `https://www.commandlayer.org/verify.html`
 - API verifier: `https://www.commandlayer.org/api/verify`
 
+## Full proof demo
+
+```bash
+npm run example:demo
+```
+
+This runs an agent action, emits a signed receipt, verifies it, tampers with the output, and verifies again to show `INVALID`.
+
 ## Builder integration examples
 
 All examples are dependency-free TypeScript and use:
