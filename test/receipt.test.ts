@@ -41,15 +41,12 @@ test("wrap() still returns output and receipt with expected fields", async () =>
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
-  const result = await cl.wrap("summarize", {
-    input: { content: "hello world" },
-    run: async () => ({ summary: "hello world" }),
-  });
+  const result = await cl.wrap("summarize", async () => ({ summary: "hello world" }));
 
   assert.deepEqual(result.output, { summary: "hello world" });
   assert.equal(result.receipt.signer, "verifyagent.eth");
   assert.equal(result.receipt.verb, "summarize");
-  assert.deepEqual(result.receipt.input, { content: "hello world" });
+  assert.deepEqual(result.receipt.input, {});
   assert.deepEqual(result.receipt.output, { summary: "hello world" });
   assert.ok(result.receipt.metadata.proof.hash_sha256.length > 0);
   assert.ok(result.receipt.signature.sig.length > 0);
@@ -64,10 +61,7 @@ test("canonical payload excludes metadata and signature", async () => {
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
-  const { receipt } = await cl.wrap("summarize", {
-    input: { x: 1 },
-    run: async () => ({ y: 2 }),
-  });
+  const { receipt } = await cl.wrap("summarize", async () => ({ y: 2 }));
 
   const canonicalPayload = canonicalPayloadFromReceiptInput(receipt);
   assert.equal("metadata" in canonicalPayload, false);
@@ -110,10 +104,7 @@ test("verify() POSTs receipt JSON directly to verifierUrl", async () => {
     verifierUrl,
   });
 
-  const { receipt } = await cl.wrap("summarize", {
-    input: { content: "hello" },
-    run: async () => ({ summary: "hello" }),
-  });
+  const { receipt } = await cl.wrap("summarize", async () => ({ summary: "hello" }));
 
   const verification = await cl.verify(receipt);
   assert.deepEqual(verification, { status: "ok" });
