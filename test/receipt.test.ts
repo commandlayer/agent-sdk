@@ -66,6 +66,28 @@ test("canonical payload excludes metadata and signature", async () => {
   assert.notEqual(tamperedHash, receipt.metadata.proof.hash_sha256);
 });
 
+
+test("wrap returns signed error receipt when wrapped agent throws", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "v1",
+    canonicalization: "json.sorted_keys.v1",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  const result = await cl.wrap("summarize", {
+    input: { content: "hello" },
+    run: async () => {
+      throw new Error("simulated failure");
+    },
+  });
+
+  assert.equal(result.receipt.execution.status, "error");
+  assert.match(result.receipt.execution.error ?? "", /simulated failure/);
+  assert.ok(result.receipt.metadata.proof.hash_sha256);
+  assert.ok(result.receipt.signature.sig);
+});
+
 test("verification helper posts to verifierUrl", async () => {
   let requestBody = "";
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
