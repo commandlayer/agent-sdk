@@ -22,7 +22,8 @@
     "example:langchain": "node dist/examples/langchain-wrapper.js",
     "example:tool": "node dist/examples/openai-tool-wrapper.js",
     "example:workflow": "node dist/examples/workflow-job-runner.js",
-    "example:a2a": "node dist/examples/agent-to-agent-verify.js"
+    "example:a2a": "node dist/examples/agent-to-agent-verify.js",
+    "example:existing": "node dist/examples/existing-agent-integration.js"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
