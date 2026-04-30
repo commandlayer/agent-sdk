@@ -1,31 +1,38 @@
 # Builder integration examples
 
-These examples show how different builders can use CommandLayer receipts with a simple pattern:
+These demo-safe examples show how different builders can use CommandLayer receipts with a simple pattern:
 
 1. wrap a function with `CommandLayer.wrap(...)`
 2. emit a signed receipt
 3. verify it with the default CommandLayer verifier URL
 
-All examples use these env vars:
+All examples are dependency-free and intentionally use mocked execution (no real OpenAI, LangChain, or Zapier dependencies).
+
+## Environment variables
 
 - `CL_PRIVATE_KEY_PEM`
 - `CL_KEY_ID`
 - `CL_AGENT` (defaults to `exampleagent.eth`)
 
+## Verifier endpoints
+
+- Default verifier URL: `https://www.commandlayer.org/api/verify`
+- VerifyAgent endpoint: `https://www.commandlayer.org/api/agents/verifyagent`
+
 ## Examples
 
 - `examples/basic-js-agent.ts` — **Agent frameworks**
-  - A minimal agent function (`summarize`) wrapped with CommandLayer.
+  - Minimal agent function (`summarize`) wrapped with CommandLayer.
 - `examples/openai-tool-wrapper.ts` — **Tool/function calling**
-  - A fake OpenAI-style tool call (`get_weather`) wrapped as `tool.get_weather`.
+  - Demo-safe OpenAI-style tool payload (`get_weather`) wrapped as `tool.get_weather`.
 - `examples/langchain-wrapper.ts` — **Agent frameworks**
-  - A fake LangChain-style `chain.invoke(...)` flow.
+  - Demo-safe LangChain-style `chain.invoke(...)` flow.
 - `examples/workflow-job-runner.ts` — **Workflow automation**
-  - A Zapier/Make/n8n-style workflow run with steps recorded in output.
+  - Demo-safe Zapier/Make/n8n-style workflow run with steps recorded in output.
 - `examples/agent-to-agent-verify.ts` — **Multi-agent systems**
-  - Agent A produces a receipt, and Agent B verifies it.
+  - Agent A produces a receipt and Agent B verifies it.
 - `examples/existing-agent-integration.ts` — **Existing agent integration**
-  - Keep your current agent implementation and wrap only the execution boundary.
+  - Keep current agent logic and wrap only the execution boundary.
 
 ## Run
 
@@ -38,8 +45,7 @@ After building:
 - `npm run example:a2a`
 - `npm run example:existing`
 
-
-## Receipt shape
+## Receipt shape example
 
 ```json
 {
@@ -47,9 +53,13 @@ After building:
   "verb": "tool.get_weather",
   "ts": "2026-04-29T14:22:00.000Z",
   "input": {
-    "city": "Jacksonville"
+    "tool_name": "get_weather",
+    "arguments": {
+      "city": "Jacksonville"
+    }
   },
   "output": {
+    "city": "Jacksonville",
     "forecast": "sunny"
   },
   "execution": {
@@ -72,15 +82,10 @@ After building:
 }
 ```
 
-- `signer` = ENS identity of the agent
-- `verb` = action being proven
-- `input`/`output` = what was executed
-- `metadata.proof.hash_sha256` = canonical receipt hash
-- `signature` = Ed25519 signature over the receipt proof
-
 ## Common errors
 
-- Missing `CL_PRIVATE_KEY_PEM`
-- Missing `CL_KEY_ID`
-- Verification returns `INVALID` if receipt input/output is edited after signing
-- Network failure when public verifier is unreachable
+- Missing `CL_PRIVATE_KEY_PEM`.
+- Missing `CL_KEY_ID`.
+- Missing `CL_AGENT` (if omitted, SDK/examples default to `exampleagent.eth`).
+- Verification returns `INVALID` if receipt input/output is modified after signing.
+- Network errors can occur when the public verifier is unreachable.
