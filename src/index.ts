@@ -4,17 +4,16 @@ import type { JsonValue } from "./canonicalize.js";
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
 
-export interface CommandLayerConfig {
-  signer: string;
-  keyId: string;
-  canonicalization: string;
-  privateKeyPem?: string;
-  verifierUrl?: string;
-}
+const DEFAULT_VERIFIER_URL = "https://www.commandlayer.org/api/verify";
 
-export interface WrapParams<TOutput> {
-  input: unknown;
-  run: () => Promise<TOutput>;
+export interface CommandLayerConfig {
+  signer?: string;
+  agent?: string;
+  keyId: string;
+  canonicalization?: string;
+  privateKeyPem?: string;
+  privateKey?: string;
+  verifierUrl?: string;
 }
 
 export interface WrapResult<TOutput> {
@@ -23,34 +22,59 @@ export interface WrapResult<TOutput> {
 }
 
 export class CommandLayer {
-  constructor(private readonly config: CommandLayerConfig) {}
+  private readonly signer: string;
+  private readonly privateKeyPem?: string;
+  private readonly canonicalization: string;
+  private readonly verifierUrl: string;
 
+  constructor(private readonly config: CommandLayerConfig) {
+    this.signer = config.signer ?? config.agent ?? "";
+    this.privateKeyPem = config.privateKeyPem ?? config.privateKey;
+    this.canonicalization = config.canonicalization ?? "json.sorted_keys.v1";
+    this.verifierUrl = config.verifierUrl ?? DEFAULT_VERIFIER_URL;
+
+    if (!this.signer) {
+      throw new Error("CommandLayer signer (or agent) is required");
+    }
+  }
+
+  async wrap<TOutput extends JsonValue>(verb: string, run: () => Promise<TOutput>): Promise<WrapResult<TOutput>>;
   async wrap<TOutput extends JsonValue>(
     verb: string,
     params: { input: JsonValue; run: () => Promise<TOutput> },
-  ): Promise<Receipt> {
-    if (!this.config.privateKeyPem) {
-      throw new Error("CommandLayer privateKeyPem is required for signing");
+  ): Promise<WrapResult<TOutput>>;
+  async wrap<TOutput extends JsonValue>(
+    verb: string,
+    paramsOrRun: { input: JsonValue; run: () => Promise<TOutput> } | (() => Promise<TOutput>),
+  ): Promise<WrapResult<TOutput>> {
+    if (!this.privateKeyPem) {
+      throw new Error("CommandLayer privateKeyPem (or privateKey) is required for signing");
     }
 
     const startedAt = new Date().toISOString();
     const startedMs = Date.now();
 
+    const params =
+      typeof paramsOrRun === "function"
+        ? ({ input: null, run: paramsOrRun } as const)
+        : paramsOrRun;
+
     try {
       const output = await params.run();
-      const duration = Date.now() - started;
+      const completedAt = new Date().toISOString();
+      const duration = Date.now() - startedMs;
 
       const receipt = await createReceipt({
         keyId: this.config.keyId,
-        privateKeyPem: this.config.privateKeyPem,
-        canonicalization: this.config.canonicalization,
+        privateKeyPem: this.privateKeyPem,
+        canonicalization: this.canonicalization,
         input: {
-          signer: this.config.signer,
+          signer: this.signer,
           verb,
           ts: new Date().toISOString(),
           input: params.input,
           output,
-          execution: { status: "ok", duration_ms: duration },
+          execution: { status: "ok", duration_ms: duration, started_at: startedAt, completed_at: completedAt },
         },
       });
 
@@ -59,10 +83,10 @@ export class CommandLayer {
       const completedAt = new Date().toISOString();
       const receipt = await createReceipt({
         keyId: this.config.keyId,
-        privateKeyPem: this.config.privateKeyPem,
-        canonicalization: this.config.canonicalization,
+        privateKeyPem: this.privateKeyPem,
+        canonicalization: this.canonicalization,
         input: {
-          signer: this.config.signer,
+          signer: this.signer,
           verb,
           ts: new Date().toISOString(),
           input: params.input,
@@ -77,16 +101,12 @@ export class CommandLayer {
         },
       });
 
-      return { output: undefined as TOutput, receipt };
+      return { output: undefined as unknown as TOutput, receipt };
     }
   }
 
   async verify(receipt: Receipt): Promise<unknown> {
-    if (!this.config.verifierUrl) {
-      throw new Error("CommandLayer verifierUrl is required for verify");
-    }
-
-    const response = await fetch(this.config.verifierUrl, {
+    const response = await fetch(this.verifierUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(receipt),

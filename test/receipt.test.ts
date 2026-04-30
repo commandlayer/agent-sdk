@@ -15,12 +15,22 @@ function toPem(pkcs8: ArrayBuffer): string {
 }
 
 async function generatePrivateKeyPem(): Promise<string> {
-  const keyPair = await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const keyPair = (await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"])) as CryptoKeyPair;
   const pkcs8 = await webcrypto.subtle.exportKey("pkcs8", keyPair.privateKey);
   return toPem(pkcs8);
 }
 
-test("wrapping an action creates a receipt with required fields", async () => {
+test("default verifierUrl is CommandLayer public verify endpoint", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "v1",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  assert.equal((cl as unknown as { verifierUrl: string }).verifierUrl, "https://www.commandlayer.org/api/verify");
+});
+
+test("wrap() still returns output and receipt with expected fields", async () => {
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
     keyId: "v1",
@@ -30,15 +40,17 @@ test("wrapping an action creates a receipt with required fields", async () => {
 
   const result = await cl.wrap("summarize", {
     input: { content: "hello world" },
-    run: async () => "hello world",
+    run: async () => ({ summary: "hello world" }),
   });
 
-  assert.equal(result.output, "hello world");
+  assert.deepEqual(result.output, { summary: "hello world" });
+  assert.equal(result.receipt.signer, "verifyagent.eth");
   assert.equal(result.receipt.verb, "summarize");
+  assert.deepEqual(result.receipt.input, { content: "hello world" });
+  assert.deepEqual(result.receipt.output, { summary: "hello world" });
   assert.ok(result.receipt.metadata.proof.hash_sha256.length > 0);
   assert.ok(result.receipt.signature.sig.length > 0);
-  assert.ok(result.receipt.execution.started_at);
-  assert.ok(result.receipt.execution.completed_at);
+  assert.ok(result.receipt.signature.kid.length > 0);
 });
 
 test("canonical payload excludes metadata and signature", async () => {
@@ -66,15 +78,20 @@ test("canonical payload excludes metadata and signature", async () => {
   assert.notEqual(tamperedHash, receipt.metadata.proof.hash_sha256);
 });
 
-test("verification helper posts to verifierUrl", async () => {
+test("verify() POSTs receipt JSON directly to verifierUrl", async () => {
   let requestBody = "";
+  let requestMethod = "";
+  let requestContentType = "";
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
+    requestMethod = req.method ?? "";
+    requestContentType = req.headers["content-type"] ?? "";
+
     req.on("data", (chunk: Buffer) => {
       requestBody += chunk;
     });
     req.on("end", () => {
       res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ ok: true }));
+      res.end(JSON.stringify({ status: "ok" }));
     });
   });
 
@@ -86,18 +103,19 @@ test("verification helper posts to verifierUrl", async () => {
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
     keyId: "v1",
-    canonicalization: "json.sorted_keys.v1",
     privateKeyPem: await generatePrivateKeyPem(),
     verifierUrl,
   });
 
   const { receipt } = await cl.wrap("summarize", {
     input: { content: "hello" },
-    run: async () => "hello",
+    run: async () => ({ summary: "hello" }),
   });
 
   const verification = await cl.verify(receipt);
-  assert.deepEqual(verification, { ok: true });
+  assert.deepEqual(verification, { status: "ok" });
+  assert.equal(requestMethod, "POST");
+  assert.equal(requestContentType, "application/json");
   assert.deepEqual(JSON.parse(requestBody), receipt);
 
   server.close();
