@@ -1,4 +1,5 @@
 import { createReceipt, type Receipt } from "./receipt.js";
+import type { JsonValue } from "./canonicalize.js";
 
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
@@ -15,50 +16,87 @@ export interface CommandLayerConfig {
 
 export const DEFAULT_VERIFIER_URL = "https://www.commandlayer.org/api/verify";
 
+export interface WrapOptions<TOutput = unknown> {
+  input?: JsonValue;
+  run: () => Promise<TOutput>;
+}
+
 export interface WrapResult<TOutput = unknown> {
   output: TOutput;
   receipt: Receipt;
 }
 
 export class CommandLayer {
-  private readonly config: CommandLayerConfig;
+  private readonly config: Required<
+    Pick<CommandLayerConfig, "keyId" | "canonicalization" | "verifierUrl">
+  > &
+    CommandLayerConfig;
+
   readonly verifierUrl: string;
 
   constructor(config: CommandLayerConfig) {
     this.config = {
       ...config,
+      canonicalization: config.canonicalization ?? "json.sorted_keys.v1",
       verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
     };
-    this.verifierUrl = this.config.verifierUrl!;
+
+    this.verifierUrl = this.config.verifierUrl;
   }
 
   async wrap<TOutput>(
     verb: string,
     fn: () => Promise<TOutput>,
+  ): Promise<WrapResult<TOutput>>;
+
+  async wrap<TOutput>(
+    verb: string,
+    options: WrapOptions<TOutput>,
+  ): Promise<WrapResult<TOutput>>;
+
+  async wrap<TOutput>(
+    verb: string,
+    fnOrOptions: (() => Promise<TOutput>) | WrapOptions<TOutput>,
   ): Promise<WrapResult<TOutput>> {
-    if (!this.config.privateKeyPem) {
+    const privateKeyPem = this.config.privateKeyPem ?? this.config.privateKey;
+
+    if (!privateKeyPem) {
       throw new Error("CommandLayer privateKeyPem is required for signing");
     }
+
+    const signer = this.config.agent ?? this.config.signer;
+
+    if (!signer) {
+      throw new Error("CommandLayer agent or signer is required");
+    }
+
+    const run =
+      typeof fnOrOptions === "function" ? fnOrOptions : fnOrOptions.run;
+
+    const input =
+      typeof fnOrOptions === "function"
+        ? {}
+        : fnOrOptions.input ?? {};
 
     const startedMs = Date.now();
     const startedAt = new Date().toISOString();
 
     try {
-      const output = await fn();
+      const output = await run();
 
       const completedAt = new Date().toISOString();
       const durationMs = Date.now() - startedMs;
 
       const receipt = await createReceipt({
         keyId: this.config.keyId,
-        privateKeyPem: this.config.privateKeyPem,
-        canonicalization: this.config.canonicalization ?? "json.sorted_keys.v1",
+        privateKeyPem,
+        canonicalization: this.config.canonicalization,
         input: {
-          signer: this.config.agent ?? this.config.signer ?? "unknown",
+          signer,
           verb,
-          ts: new Date().toISOString(),
-          input: {},
-          output: output as unknown as import("./canonicalize.js").JsonValue,
+          ts: startedAt,
+          input: input as JsonValue,
+          output: output as JsonValue,
           execution: {
             status: "ok",
             duration_ms: durationMs,
@@ -75,35 +113,38 @@ export class CommandLayer {
 
       const receipt = await createReceipt({
         keyId: this.config.keyId,
-        privateKeyPem: this.config.privateKeyPem,
-        canonicalization: this.config.canonicalization ?? "json.sorted_keys.v1",
+        privateKeyPem,
+        canonicalization: this.config.canonicalization,
         input: {
-          signer: this.config.agent ?? this.config.signer ?? "unknown",
+          signer,
           verb,
-          ts: new Date().toISOString(),
-          input: {},
+          ts: startedAt,
+          input: input as JsonValue,
           output: null,
           execution: {
             status: "error",
             duration_ms: durationMs,
             started_at: startedAt,
             completed_at: completedAt,
-            error: String(err),
+            error: err instanceof Error ? err.message : String(err),
           },
         },
       });
 
-      return { output: undefined as unknown as TOutput, receipt };
+      return {
+        output: undefined as unknown as TOutput,
+        receipt,
+      };
     }
   }
 
-  async verify(receipt: Receipt) {
-    const res = await fetch(this.config.verifierUrl!, {
+  async verify(receipt: Receipt): Promise<unknown> {
+    const response = await fetch(this.config.verifierUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(receipt),
     });
 
-    return res.json();
+    return response.json();
   }
 }
