@@ -21,12 +21,14 @@ All examples are dependency-free and intentionally use mocked execution (no real
 
 ## Examples
 
-- `examples/basic-js-agent.ts` — **Agent frameworks**
+- `examples/basic-agent.ts` — **Agent frameworks**
   - Minimal agent function (`summarize`) wrapped with CommandLayer.
 - `examples/openai-tool-wrapper.ts` — **Tool/function calling**
   - Demo-safe OpenAI-style tool payload (`get_weather`) wrapped as `tool.get_weather`.
-- `examples/langchain-wrapper.ts` — **Agent frameworks**
+- `examples/langchain-agent.ts` — **Agent frameworks**
   - Demo-safe LangChain-style `chain.invoke(...)` flow.
+- `examples/wrapped-agent-demo.ts` — **Agent frameworks**
+  - Minimal wrapped demo that prints output, receipt, and verification.
 - `examples/workflow-job-runner.ts` — **Workflow automation**
   - Demo-safe Zapier/Make/n8n-style workflow run with steps recorded in output.
 - `examples/agent-to-agent-verify.ts` — **Multi-agent systems**
@@ -39,6 +41,7 @@ All examples are dependency-free and intentionally use mocked execution (no real
 After building:
 
 - `npm run example:basic`
+- `npm run example:wrapped`
 - `npm run example:tool`
 - `npm run example:langchain`
 - `npm run example:workflow`
