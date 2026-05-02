@@ -1,16 +1,11 @@
 import { CommandLayer } from "../src/index.js";
 
 const privateKeyPem = process.env.CL_PRIVATE_KEY_PEM;
-const keyId = process.env.CL_KEY_ID;
-const agent = process.env.CL_AGENT ?? "exampleagent.eth";
+const keyId = process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ";
+const agent = process.env.CL_AGENT ?? "runtime.commandlayer.eth";
 
 if (!privateKeyPem) {
   console.error("Missing CL_PRIVATE_KEY_PEM. Please set a PKCS8 Ed25519 private key in CL_PRIVATE_KEY_PEM.");
-  process.exit(1);
-}
-
-if (!keyId) {
-  console.error("Missing CL_KEY_ID. Please set the key identifier used to sign receipts.");
   process.exit(1);
 }
 
