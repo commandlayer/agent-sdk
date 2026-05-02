@@ -18,9 +18,9 @@ npm install @commandlayer/agent-sdk
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: "runtime.commandlayer.eth",
+  agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   privateKey: process.env.CL_PRIVATE_KEY_PEM,
-  keyId: "vC4WbcNoq2znSCiQ"
+  keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ"
 });
 
 const result = await cl.wrap("summarize", async () => {
