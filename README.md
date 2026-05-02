@@ -18,9 +18,9 @@ npm install @commandlayer/agent-sdk
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: "exampleagent.eth",
+  agent: "runtime.commandlayer.eth",
   privateKey: process.env.CL_PRIVATE_KEY_PEM,
-  keyId: "v1"
+  keyId: "vC4WbcNoq2znSCiQ"
 });
 
 const result = await cl.wrap("summarize", async () => {
@@ -39,6 +39,8 @@ wrap() returns both:
 - receipt: the signed CommandLayer receipt for that action
 
 This signs the agent action and verifies it through the public CommandLayer verifier.
+
+The demo signer/key id match the public VerifyAgent demo. For your own agent, replace these with your ENS signer and key id.
 
 Verifier references:
 
@@ -59,7 +61,7 @@ All examples are dependency-free TypeScript and use:
 
 - `CL_PRIVATE_KEY_PEM`
 - `CL_KEY_ID`
-- `CL_AGENT` (defaults to `exampleagent.eth`)
+- `CL_AGENT` (defaults to `runtime.commandlayer.eth`)
 
 Examples by builder type:
 

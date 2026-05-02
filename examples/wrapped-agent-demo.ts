@@ -1,9 +1,9 @@
 import { CommandLayer } from "../src/index.js";
 
 const cl = new CommandLayer({
-  signer: "exampleagent.eth",
+  signer: "runtime.commandlayer.eth",
   privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
-  keyId: "v1",
+  keyId: "vC4WbcNoq2znSCiQ",
   canonicalization: "json.sorted_keys.v1",
   verifierUrl: "https://www.commandlayer.org/api/verify",
 });

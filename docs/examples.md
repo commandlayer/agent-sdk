@@ -12,7 +12,9 @@ All examples are dependency-free and intentionally use mocked execution (no real
 
 - `CL_PRIVATE_KEY_PEM`
 - `CL_KEY_ID`
-- `CL_AGENT` (defaults to `exampleagent.eth`)
+- `CL_AGENT` (defaults to `runtime.commandlayer.eth`)
+
+The demo signer/key id match the public VerifyAgent demo. For your own agent, replace these with your ENS signer and key id.
 
 ## Verifier endpoints
 
@@ -52,7 +54,7 @@ After building:
 
 ```json
 {
-  "signer": "exampleagent.eth",
+  "signer": "runtime.commandlayer.eth",
   "verb": "tool.get_weather",
   "ts": "2026-04-29T14:22:00.000Z",
   "input": {
@@ -79,7 +81,7 @@ After building:
   },
   "signature": {
     "alg": "ed25519",
-    "kid": "v1",
+    "kid": "vC4WbcNoq2znSCiQ",
     "sig": "..."
   }
 }
@@ -89,6 +91,6 @@ After building:
 
 - Missing `CL_PRIVATE_KEY_PEM`.
 - Missing `CL_KEY_ID`.
-- Missing `CL_AGENT` (if omitted, SDK/examples default to `exampleagent.eth`).
+- Missing `CL_AGENT` (if omitted, SDK/examples default to `runtime.commandlayer.eth`).
 - Verification returns `INVALID` if receipt input/output is modified after signing.
 - Network errors can occur when the public verifier is unreachable.
