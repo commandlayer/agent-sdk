@@ -4,13 +4,10 @@ Wrap your agent. Emit a signed receipt. Verify through CommandLayer.
 
 `@commandlayer/agent-sdk` is a minimal Node-first TypeScript SDK for generating signed receipts around agent actions and verifying them with the live verifier API.
 
-> Publication note: this package scaffold is not published to npm yet.
-
-## Install (local repo)
+## Install
 
 ```bash
-npm install
-npm run build
+npm install @commandlayer/agent-sdk
 ```
 
 ## Wrap your agent
