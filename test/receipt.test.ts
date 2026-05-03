@@ -120,7 +120,7 @@ test("verification helper posts to verifierUrl", async () => {
 
   const verification = await cl.verify(receipt);
   assert.deepEqual(verification, { ok: true });
-  assert.deepEqual(JSON.parse(requestBody), receipt);
+  assert.deepEqual(JSON.parse(requestBody), { receipt });
 
   server.close();
 });

@@ -26,7 +26,7 @@
     "example:workflow": "node dist/examples/workflow-job-runner.js",
     "example:a2a": "node dist/examples/agent-to-agent-verify.js",
     "example:existing": "node dist/examples/existing-agent-integration.js",
-    "example:demo": "npm run build && node dist/examples/full-demo.js"
+    "example:demo": "node dist/examples/full-demo.js"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

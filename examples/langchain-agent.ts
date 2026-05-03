@@ -14,10 +14,9 @@ if (!process.env.CL_PRIVATE_KEY_PEM) {
 }
 
 const cl = new CommandLayer({
-  signer: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
+  agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
-  canonicalization: process.env.CL_CANONICAL_ID ?? "json.sorted_keys." + "v" + "1",
-  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  privateKey: process.env.CL_PRIVATE_KEY_PEM,
 });
 
 const input = { prompt: "Summarize how receipts prove agent actions." };
