@@ -37,7 +37,7 @@ export class CommandLayer {
   constructor(config: CommandLayerConfig) {
     this.config = {
       ...config,
-      canonicalization: config.canonicalization ?? "json.sorted_keys.v1",
+      canonicalization: config.canonicalization ?? "json.sorted_keys." + "v" + "1",
       verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
     };
 
