@@ -21,6 +21,6 @@ const cl = new CommandLayer({
 
 const input = { prompt: "Summarize how receipts prove agent actions." };
 
-const receipt = await cl.wrap("chain.invoke", async () => chain.invoke(input));
+const result = await cl.wrap("chain.invoke", async () => chain.invoke(input));
 
-console.log(JSON.stringify(receipt, null, 2));
+console.log(JSON.stringify(result.receipt, null, 2));

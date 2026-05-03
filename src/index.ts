@@ -27,10 +27,13 @@ export interface WrapResult<TOutput = unknown> {
 }
 
 export class CommandLayer {
-  private readonly config: Required<
-    Pick<CommandLayerConfig, "keyId" | "canonicalization" | "verifierUrl">
-  > &
-    CommandLayerConfig;
+  private readonly config: {
+    signer: string;
+    privateKeyPem: string;
+    keyId: string;
+    canonicalization: string;
+    verifierUrl: string;
+  };
 
   readonly verifierUrl: string;
 
