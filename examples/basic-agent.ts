@@ -13,7 +13,7 @@ if (!process.env.CL_PRIVATE_KEY_PEM) {
 const cl = new CommandLayer({
   agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
-  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  privateKey: process.env.CL_PRIVATE_KEY_PEM,
   verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 

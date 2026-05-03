@@ -23,17 +23,14 @@ npm run build
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  signer: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
-  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
+  privateKey: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
-  canonicalization: "json.sorted_keys.${"v"+"1"}",
-  verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 
-const result = await cl.wrap("summarize", {
-  input: { content: "hello world" },
-  run: async () => "hello world",
-});
+const result = await cl.wrap("summarize", async () => ({
+  summary: "hello world",
+}));
 
 console.log(result.output);
 console.log(result.receipt);

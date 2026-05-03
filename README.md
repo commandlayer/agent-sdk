@@ -101,10 +101,7 @@ See also: `docs/examples.md`.
 CommandLayer wraps the boundary around the action so your agent keeps its existing logic. The SDK emits a signed receipt tied to the agent’s ENS identity that can be verified publicly.
 
 ```ts
-const result = await cl.wrap("agent.execute", {
-  input,
-  run: () => existingAgent.run(input),
-});
+const result = await cl.wrap("agent.execute", async () => existingAgent.run(input));
 
 const verified = await cl.verify(result.receipt);
 ```
