@@ -12,7 +12,7 @@ npm install @commandlayer/agent-sdk
 
 ## Wrap your agent
 
-`wrap` returns both the output and a signed receipt.
+`wrap()` returns `{ output, receipt }`; `receipt` is signed.
 
 ```ts
 import { CommandLayer } from "@commandlayer/agent-sdk";
@@ -42,12 +42,15 @@ The receipt includes the ENS signer identity and proof metadata required for ind
 
 This signs the agent action with its ENS identity and verifies it through the public CommandLayer verifier.
 
-The demo signer/key id match the public VerifyAgent demo (`runtime.commandlayer.eth`). For your own agent, replace these with your ENS name and signing key id.
+`runtime.commandlayer.eth` is the demo signer. Developers must replace it with their own ENS name and key (`CL_AGENT`, `CL_KEY_ID`, and `CL_PRIVATE_KEY_PEM`).
 
 Verifier references:
 
 - UI verifier: `https://www.commandlayer.org/verify.html`
 - API verifier: `https://www.commandlayer.org/api/verify`
+
+Private key must be a valid Ed25519 PKCS#8 PEM. Invalid formats will fail during import.
+
 
 ## Full proof demo
 

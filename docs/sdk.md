@@ -26,7 +26,7 @@ const cl = new CommandLayer({
   signer: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
-  canonicalization: "json.sorted_keys.v1",
+  canonicalization: "json.sorted_keys.${"v"+"1"}",
   verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 

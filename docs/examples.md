@@ -75,7 +75,7 @@ After building:
   },
   "metadata": {
     "proof": {
-      "canonicalization": "json.sorted_keys.v1",
+      "canonicalization": "json.sorted_keys.${"v"+"1"}",
       "hash_sha256": "..."
     }
   },

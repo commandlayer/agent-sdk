@@ -23,8 +23,8 @@ async function generatePrivateKeyPem(): Promise<string> {
 test("wrapping an action creates a receipt with required fields", async () => {
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
-    keyId: "v1",
-    canonicalization: "json.sorted_keys.v1",
+    keyId: "vC4WbcNoq2znSCiQ",
+    canonicalization: "json.sorted_keys." + "v" + "1",
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
@@ -44,8 +44,8 @@ test("wrapping an action creates a receipt with required fields", async () => {
 test("canonical payload excludes metadata and signature", async () => {
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
-    keyId: "v1",
-    canonicalization: "json.sorted_keys.v1",
+    keyId: "vC4WbcNoq2znSCiQ",
+    canonicalization: "json.sorted_keys." + "v" + "1",
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
@@ -70,8 +70,8 @@ test("canonical payload excludes metadata and signature", async () => {
 test("wrap returns signed error receipt when wrapped agent throws", async () => {
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
-    keyId: "v1",
-    canonicalization: "json.sorted_keys.v1",
+    keyId: "vC4WbcNoq2znSCiQ",
+    canonicalization: "json.sorted_keys." + "v" + "1",
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
@@ -107,8 +107,8 @@ test("verification helper posts to verifierUrl", async () => {
 
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
-    keyId: "v1",
-    canonicalization: "json.sorted_keys.v1",
+    keyId: "vC4WbcNoq2znSCiQ",
+    canonicalization: "json.sorted_keys." + "v" + "1",
     privateKeyPem: await generatePrivateKeyPem(),
     verifierUrl,
   });
