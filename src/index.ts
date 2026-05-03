@@ -38,8 +38,16 @@ export class CommandLayer {
   readonly verifierUrl: string;
 
   constructor(config: CommandLayerConfig) {
-    const signer = config.signer ?? config.agent;
-    const privateKeyPem = config.privateKeyPem ?? config.privateKey;
+    const signer = config.agent ?? config.signer;
+    const privateKeyPem = config.privateKey ?? config.privateKeyPem;
+
+    if (!signer) {
+      throw new Error("Missing signer (agent or signer required)");
+    }
+
+    if (!privateKeyPem) {
+      throw new Error("Missing privateKey (privateKey or privateKeyPem required)");
+    }
 
     this.config = {
       ...config,
