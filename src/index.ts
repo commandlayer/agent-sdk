@@ -39,19 +39,12 @@ export class CommandLayer {
 
   constructor(config: CommandLayerConfig) {
     const signer = config.signer ?? config.agent;
-    if (!signer) {
-      throw new Error("CommandLayer agent or signer is required");
-    }
-
     const privateKeyPem = config.privateKeyPem ?? config.privateKey;
-    if (!privateKeyPem) {
-      throw new Error("CommandLayer privateKey or privateKeyPem is required for signing");
-    }
 
     this.config = {
+      ...config,
       signer,
       privateKeyPem,
-      keyId: config.keyId,
       canonicalization: config.canonicalization ?? "json.sorted_keys." + "v" + "1",
       verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
     };
@@ -73,7 +66,17 @@ export class CommandLayer {
     verb: string,
     fnOrOptions: (() => Promise<TOutput>) | WrapOptions<TOutput>,
   ): Promise<WrapResult<TOutput>> {
-    const { privateKeyPem, signer } = this.config;
+    const privateKeyPem = this.config.privateKeyPem;
+
+    if (!privateKeyPem) {
+      throw new Error("CommandLayer privateKeyPem is required for signing");
+    }
+
+    const signer = this.config.signer;
+
+    if (!signer) {
+      throw new Error("CommandLayer agent or signer is required");
+    }
 
     const run =
       typeof fnOrOptions === "function" ? fnOrOptions : fnOrOptions.run;
@@ -146,10 +149,10 @@ export class CommandLayer {
     const timeout = setTimeout(() => controller.abort(), 10_000);
 
     try {
-      const response = await fetch(this.config.verifierUrl, {
+      const response = await fetch(this.verifierUrl ?? DEFAULT_VERIFIER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(receipt),
+        body: JSON.stringify({ receipt }),
         signal: controller.signal,
       });
 

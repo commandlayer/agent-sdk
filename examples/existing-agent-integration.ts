@@ -26,10 +26,7 @@ const input = {
 
 console.log("Already have an agent? Wrap the action, don't rewrite the agent.");
 
-const result = await cl.wrap("agent.execute", {
-  input,
-  run: () => existingAgent.run(input),
-});
+const result = await cl.wrap("agent.execute", async () => existingAgent.run(input));
 
 const verification = await cl.verify(result.receipt);
 

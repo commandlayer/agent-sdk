@@ -15,13 +15,10 @@ const toolCall = {
   arguments: { city: "Jacksonville" },
 };
 
-const result = await cl.wrap("tool.get_weather", {
-  input: toolCall,
-  run: async () => ({
-    city: toolCall.arguments.city,
-    forecast: "sunny",
-  }),
-});
+const result = await cl.wrap("tool.get_weather", async () => ({
+  city: toolCall.arguments.city,
+  forecast: "sunny",
+}));
 
 console.log("tool_call", toolCall);
 console.log("output", result.output);

@@ -4,8 +4,6 @@ const cl = new CommandLayer({
   agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   privateKey: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
-  canonicalization: "json.sorted_keys." + "v" + "1",
-  verifierUrl: "https://www.commandlayer.org/api/verify",
 });
 
 const result = await cl.wrap("summarize", async () => {
