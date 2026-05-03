@@ -1,10 +1,10 @@
 import { CommandLayer } from "../src/index.js";
 
-const privateKeyPem = process.env.CL_PRIVATE_KEY_PEM;
+const privateKey = process.env.CL_PRIVATE_KEY_PEM;
 const keyId = process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ";
 const agent = process.env.CL_AGENT ?? "runtime.commandlayer.eth";
 
-if (!privateKeyPem) {
+if (!privateKey) {
   throw new Error("Missing required env var: CL_PRIVATE_KEY_PEM.");
 }
 
@@ -17,7 +17,7 @@ const existingAgent = {
   },
 };
 
-const cl = new CommandLayer({ agent, keyId, privateKeyPem });
+const cl = new CommandLayer({ agent, keyId, privateKey });
 
 const input = {
   task: "generate a one-line status update",

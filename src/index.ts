@@ -27,16 +27,31 @@ export interface WrapResult<TOutput = unknown> {
 }
 
 export class CommandLayer {
-  private readonly config: Required<
-    Pick<CommandLayerConfig, "keyId" | "canonicalization" | "verifierUrl">
-  > &
-    CommandLayerConfig;
+  private readonly config: {
+    signer: string;
+    privateKeyPem: string;
+    keyId: string;
+    canonicalization: string;
+    verifierUrl: string;
+  };
 
   readonly verifierUrl: string;
 
   constructor(config: CommandLayerConfig) {
+    const signer = config.signer ?? config.agent;
+    if (!signer) {
+      throw new Error("CommandLayer agent or signer is required");
+    }
+
+    const privateKeyPem = config.privateKeyPem ?? config.privateKey;
+    if (!privateKeyPem) {
+      throw new Error("CommandLayer privateKey or privateKeyPem is required for signing");
+    }
+
     this.config = {
-      ...config,
+      signer,
+      privateKeyPem,
+      keyId: config.keyId,
       canonicalization: config.canonicalization ?? "json.sorted_keys." + "v" + "1",
       verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
     };
@@ -58,17 +73,7 @@ export class CommandLayer {
     verb: string,
     fnOrOptions: (() => Promise<TOutput>) | WrapOptions<TOutput>,
   ): Promise<WrapResult<TOutput>> {
-    const privateKeyPem = this.config.privateKeyPem ?? this.config.privateKey;
-
-    if (!privateKeyPem) {
-      throw new Error("CommandLayer privateKeyPem is required for signing");
-    }
-
-    const signer = this.config.agent ?? this.config.signer;
-
-    if (!signer) {
-      throw new Error("CommandLayer agent or signer is required");
-    }
+    const { privateKeyPem, signer } = this.config;
 
     const run =
       typeof fnOrOptions === "function" ? fnOrOptions : fnOrOptions.run;
