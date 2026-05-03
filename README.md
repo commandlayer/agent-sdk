@@ -2,7 +2,7 @@
 
 Wrap your agent. Emit a signed receipt. Verify through CommandLayer.
 
-`@commandlayer/agent-sdk` is a minimal Node-first TypeScript SDK for generating signed receipts around agent actions and verifying them with the live verifier API.
+`@commandlayer/agent-sdk` is a minimal Node-first TypeScript SDK for generating signed receipts from ENS-named agents and verifying them with the public CommandLayer verifier.
 
 ## Install
 
@@ -38,9 +38,11 @@ wrap() returns both:
 - output: the value returned by your agent function
 - receipt: the signed CommandLayer receipt for that action
 
-This signs the agent action and verifies it through the public CommandLayer verifier.
+The receipt includes the ENS signer identity and proof metadata required for independent verification.
 
-The demo signer/key id match the public VerifyAgent demo. For your own agent, replace these with your ENS signer and key id.
+This signs the agent action with its ENS identity and verifies it through the public CommandLayer verifier.
+
+The demo signer/key id match the public VerifyAgent demo (`runtime.commandlayer.eth`). For your own agent, replace these with your ENS name and signing key id.
 
 Verifier references:
 
@@ -93,7 +95,7 @@ See also: `docs/examples.md`.
 
 ## Already have an agent?
 
-CommandLayer wraps the boundary around the action so your agent keeps its existing logic. The SDK emits a signed receipt that can be verified publicly.
+CommandLayer wraps the boundary around the action so your agent keeps its existing logic. The SDK emits a signed receipt tied to the agent’s ENS identity that can be verified publicly.
 
 ```ts
 const result = await cl.wrap("agent.execute", {
