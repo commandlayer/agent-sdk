@@ -2,7 +2,7 @@ import { CommandLayer } from "../src/index.js";
 
 const cl = new CommandLayer({
   agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
-  privateKey: process.env.CL_PRIVATE_KEY_PEM,
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
 });
 

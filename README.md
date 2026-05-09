@@ -10,6 +10,14 @@ Wrap your agent. Emit a signed receipt. Verify through CommandLayer.
 npm install @commandlayer/agent-sdk
 ```
 
+> Temporary caveat (as of May 9, 2026): package availability on npm may vary by registry policy/account permissions.
+> If `npm install @commandlayer/agent-sdk` fails in your environment, use local development install:
+
+```bash
+npm install
+npm run build
+```
+
 ## Wrap your agent
 
 `wrap()` returns `{ output, receipt }`; `receipt` is signed.
@@ -19,7 +27,7 @@ import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
   agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
-  privateKey: process.env.CL_PRIVATE_KEY_PEM,
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ"
 });
 

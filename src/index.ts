@@ -10,6 +10,7 @@ export interface CommandLayerConfig {
   keyId: string;
   canonicalization?: string;
   privateKeyPem?: string;
+  /** @deprecated Use privateKeyPem instead. */
   privateKey?: string;
   verifierUrl?: string;
 }
@@ -39,14 +40,18 @@ export class CommandLayer {
 
   constructor(config: CommandLayerConfig) {
     const signer = config.agent ?? config.signer;
-    const privateKeyPem = config.privateKey ?? config.privateKeyPem;
+    const privateKeyPem = config.privateKeyPem ?? config.privateKey;
+
+    if (config.privateKey && !config.privateKeyPem) {
+      console.warn("[CommandLayer] `privateKey` is deprecated. Use `privateKeyPem` instead.");
+    }
 
     if (!signer) {
       throw new Error("Missing signer (agent or signer required)");
     }
 
     if (!privateKeyPem) {
-      throw new Error("Missing privateKey (privateKey or privateKeyPem required)");
+      throw new Error("Missing privateKeyPem (or deprecated privateKey alias)");
     }
 
     this.config = {
