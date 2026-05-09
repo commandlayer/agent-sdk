@@ -24,7 +24,7 @@ import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
   agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
-  privateKey: process.env.CL_PRIVATE_KEY_PEM,
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
 });
 
@@ -46,3 +46,6 @@ console.log(verified);
 Verifier API URL: https://www.commandlayer.org/api/verify
 
 Callable VerifyAgent URL: https://www.commandlayer.org/api/agents/verifyagent
+
+
+Deprecated alias: `privateKey` is still accepted for backward compatibility, but use `privateKeyPem` in all new code.
