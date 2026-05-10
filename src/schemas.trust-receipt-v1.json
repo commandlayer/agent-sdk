@@ -3,24 +3,39 @@
   "$id": "https://commandlayer.org/schemas/trust-receipt-v1.json",
   "type": "object",
   "allOf": [
-    { "$ref": "trust-request-v1" },
+    {
+      "$ref": "trust-request-v1"
+    },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["metadata", "signature"],
+      "required": [
+        "metadata",
+        "signature"
+      ],
       "properties": {
         "metadata": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["proof"],
+          "required": [
+            "proof"
+          ],
           "properties": {
             "proof": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["canonicalization", "hash_sha256"],
+              "required": [
+                "canonicalization",
+                "hash_sha256"
+              ],
               "properties": {
-                "canonicalization": { "type": "string", "minLength": 1 },
-                "hash_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+                "canonicalization": {
+                  "const": "json.sorted_keys.v1"
+                },
+                "hash_sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
               }
             }
           }
@@ -28,11 +43,24 @@
         "signature": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["alg", "kid", "sig"],
+          "required": [
+            "alg",
+            "kid",
+            "sig"
+          ],
           "properties": {
-            "alg": { "const": "ed25519" },
-            "kid": { "type": "string", "minLength": 1 },
-            "sig": { "type": "string", "minLength": 1 }
+            "alg": {
+              "const": "ed25519"
+            },
+            "kid": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sig": {
+              "type": "string",
+              "minLength": 16,
+              "pattern": "^[A-Za-z0-9+/=]+$"
+            }
           }
         }
       }

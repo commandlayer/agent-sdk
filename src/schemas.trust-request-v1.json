@@ -3,26 +3,72 @@
   "$id": "https://commandlayer.org/schemas/trust-request-v1.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["signer", "verb", "ts", "input", "output", "execution"],
+  "required": [
+    "signer",
+    "verb",
+    "ts",
+    "input",
+    "output",
+    "execution"
+  ],
   "properties": {
-    "signer": { "type": "string", "minLength": 1 },
+    "signer": {
+      "type": "string",
+      "minLength": 1
+    },
     "verb": {
       "type": "string",
-      "enum": ["verify", "authenticate", "authorize", "attest", "sign", "permit", "grant", "approve", "reject", "endorse"]
+      "enum": [
+        "verify",
+        "authenticate",
+        "authorize",
+        "attest",
+        "sign",
+        "permit",
+        "grant",
+        "approve",
+        "reject",
+        "endorse"
+      ]
     },
-    "ts": { "type": "string", "format": "date-time" },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
     "input": true,
     "output": true,
     "execution": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["status", "duration_ms", "started_at", "completed_at"],
+      "required": [
+        "status",
+        "duration_ms",
+        "started_at",
+        "completed_at"
+      ],
       "properties": {
-        "status": { "type": "string", "enum": ["ok", "error"] },
-        "duration_ms": { "type": "number", "minimum": 0 },
-        "started_at": { "type": "string", "format": "date-time" },
-        "completed_at": { "type": "string", "format": "date-time" },
-        "error": { "type": "string" }
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "error"
+          ]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string"
+        }
       }
     }
   }
