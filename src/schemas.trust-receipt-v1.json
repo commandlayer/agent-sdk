@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://commandlayer.org/schemas/trust-receipt-v1.json",
+  "type": "object",
+  "allOf": [
+    { "$ref": "trust-request-v1" },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metadata", "signature"],
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["proof"],
+          "properties": {
+            "proof": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["canonicalization", "hash_sha256"],
+              "properties": {
+                "canonicalization": { "type": "string", "minLength": 1 },
+                "hash_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+              }
+            }
+          }
+        },
+        "signature": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["alg", "kid", "sig"],
+          "properties": {
+            "alg": { "const": "ed25519" },
+            "kid": { "type": "string", "minLength": 1 },
+            "sig": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    }
+  ]
+}

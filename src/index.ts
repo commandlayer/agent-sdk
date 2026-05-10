@@ -3,6 +3,7 @@ import type { JsonValue } from "./canonicalize.js";
 
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
+export { validateTrustRequest, validateTrustReceipt, assertValidTrustRequest, assertValidTrustReceipt, type TrustValidationResult } from "./trust.js";
 
 export interface CommandLayerConfig {
   signer?: string;

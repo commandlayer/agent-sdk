@@ -16,8 +16,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "node --test dist/test/receipt.test.js",
+    "build": "tsc -p tsconfig.json && mkdir -p dist/src && cp src/schemas.trust-*.json dist/src/",
+    "test": "node --test dist/test/receipt.test.js dist/test/trust.test.js",
     "pretest": "npm run build",
     "example:basic": "node dist/examples/basic-agent.js",
     "example:langchain": "node dist/examples/langchain-agent.js",
@@ -31,5 +31,9 @@
   "devDependencies": {
     "@types/node": "^22.15.3",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   }
 }
