@@ -18,6 +18,29 @@ npm install
 npm run build
 ```
 
+## Quickstart
+
+```ts
+import { CommandLayer, validateTrustReceipt } from "@commandlayer/agent-sdk";
+
+const cl = new CommandLayer({
+  agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+  keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
+});
+
+const { output, receipt } = await cl.wrap("verify", {
+  input: { challenge: "abc" },
+  run: async () => ({ approved: true }),
+});
+
+const local = validateTrustReceipt(receipt); // schema only
+if (!local.ok) throw new Error(local.errors.join("; "));
+
+const remote = await cl.verify(receipt); // cryptographic verification
+console.log({ output, receipt, remote });
+```
+
 ## Wrap your agent
 
 `wrap()` returns `{ output, receipt }`; `receipt` is signed.

@@ -23,6 +23,31 @@ const cl = new CommandLayer({
 });
 ```
 
+## Practical trust flow (schema + remote verification)
+
+```ts
+import { CommandLayer, validateTrustReceipt } from "@commandlayer/agent-sdk";
+
+const cl = new CommandLayer({
+  signer: "verifyagent.eth",
+  keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
+  privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
+});
+
+const result = await cl.wrap("verify", {
+  input: { challenge: "abc" },
+  run: async () => ({ approved: true }),
+});
+
+const local = validateTrustReceipt(result.receipt);
+if (!local.ok) throw new Error(local.errors.join("; "));
+
+const remote = await cl.verify(result.receipt);
+console.log(remote);
+```
+
+Local validation checks only JSON shape/format against CLAS schemas. It does **not** prove signature correctness, hash integrity, or signer trust. Cryptographic verification is performed by the verifier (`cl.verify(...)`).
+
 ## Validation semantics (local) vs verification semantics (remote)
 
 - `validateTrustRequest` / `validateTrustReceipt` perform local JSON Schema checks for CLAS Trust Verification v1 shape.

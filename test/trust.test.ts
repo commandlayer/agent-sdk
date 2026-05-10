@@ -90,3 +90,59 @@ test("assert variants throw", async () => {
 
   assert.throws(() => assertValidTrustReceipt({ ...receipt, metadata: {} }), /Invalid CLAS Trust Verification v1 receipt/);
 });
+
+
+test("invalid date-time fails", () => {
+  const request = { ...makeValidTrustRequest(), ts: "not-a-date" };
+  const result = validateTrustRequest(request);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((err) => err.includes("/ts")));
+});
+
+test("request additionalProperties are rejected", () => {
+  const request = { ...makeValidTrustRequest(), unexpected: true };
+  const result = validateTrustRequest(request);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((err) => err.includes("must NOT have additional properties")));
+});
+
+test("missing receipt proof fields fails", async () => {
+  const receipt = await createReceipt({
+    keyId: "kid-1",
+    privateKeyPem: await generatePrivateKeyPem(),
+    canonicalization: "json.sorted_keys.v1",
+    input: makeValidTrustRequest(),
+  });
+
+  const invalid = {
+    ...receipt,
+    metadata: {
+      ...receipt.metadata,
+      proof: { canonicalization: receipt.metadata.proof.canonicalization },
+    },
+  };
+
+  const result = validateTrustReceipt(invalid);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((err) => err.includes("/metadata/proof")));
+});
+
+test("invalid canonicalization value fails", async () => {
+  const receipt = await createReceipt({
+    keyId: "kid-1",
+    privateKeyPem: await generatePrivateKeyPem(),
+    canonicalization: "json.sorted_keys.v1",
+    input: makeValidTrustRequest(),
+  });
+
+  const result = validateTrustReceipt({
+    ...receipt,
+    metadata: {
+      ...receipt.metadata,
+      proof: { ...receipt.metadata.proof, canonicalization: "json.unsorted.v1" },
+    },
+  });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((err) => err.includes("/metadata/proof/canonicalization")));
+});
