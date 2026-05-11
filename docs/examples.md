@@ -52,6 +52,8 @@ After building:
 
 ## Receipt shape example
 
+> **Note on verbs:** The `"verb": "tool.get_weather"` used below is a custom verb namespace for this example. The CLAS canonical trust-verification verbs are: `verify`, `authenticate`, `authorize`, `attest`, `sign`, `permit`, `grant`, `approve`, `reject`, `endorse`. Custom namespaces like `tool.*` are permitted in receipts but are not part of the canonical CLAS verb set.
+
 ```json
 {
   "signer": "runtime.commandlayer.eth",
@@ -75,7 +77,7 @@ After building:
   },
   "metadata": {
     "proof": {
-      "canonicalization": "json.sorted_keys.${"v"+"1"}",
+      "canonicalization": "json.sorted_keys.v1",
       "hash_sha256": "..."
     }
   },

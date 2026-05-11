@@ -24,7 +24,7 @@ npm run build
 import { CommandLayer, validateTrustReceipt } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
+  signer: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
 });
@@ -49,7 +49,7 @@ console.log({ output, receipt, remote });
 import { CommandLayer } from "@commandlayer/agent-sdk";
 
 const cl = new CommandLayer({
-  agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
+  signer: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
   verifierUrl: process.env.CL_VERIFIER_URL ?? "https://www.commandlayer.org/api/verify",
@@ -57,6 +57,8 @@ const cl = new CommandLayer({
 ```
 
 `verifierUrl` is optional; use it only when you need to override the default verifier endpoint.
+
+> **Note:** The constructor accepts both `signer` and `agent` as field names (they are aliases). `signer` is the canonical field name used in receipt payloads; `agent` is accepted for backward compatibility.
 
 ## CLAS Trust Verification v1
 
@@ -81,6 +83,12 @@ assertValidTrustReceipt(receiptPayload);
 ```
 
 These helpers validate schema shape only. They do **not** perform cryptographic verification and do not replace `cl.verify()`.
+
+Supported verbs: `verify`, `authenticate`, `authorize`, `attest`, `sign`, `permit`, `grant`, `approve`, `reject`, `endorse`.
+
+## Python SDK
+
+A Python SDK is available in the `python-sdk/` directory. See `python-sdk/README.md` for usage.
 
 ## Development
 
