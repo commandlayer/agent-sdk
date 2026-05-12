@@ -84,7 +84,7 @@ assertValidTrustReceipt(receiptPayload);
 
 These helpers validate schema shape only. They do **not** perform cryptographic verification and do not replace `cl.verify()`.
 
-Supported verbs: `verify`, `authenticate`, `authorize`, `attest`, `sign`, `permit`, `grant`, `approve`, `reject`, `endorse`.
+Supported receipt verbs: `verify`, `authenticate`, `authorize`, `attest`, `sign`, `permit`, `grant`, `approve`, `reject`, `endorse`. Canonical capability names for discovery/catalog use `clas.trust-verification.<verb>` (for example `clas.trust-verification.verify`).
 
 ## Python SDK
 
@@ -99,3 +99,8 @@ npm test
 ## License
 
 MIT
+
+
+### Verb conventions
+
+Use `cl.wrap("verify", handler)` for normal SDK usage. For discovery/catalog metadata, advertise the canonical capability name `clas.trust-verification.verify`. The SDK also accepts fully-qualified trust capability inputs in `wrap(...)` and normalizes emitted receipt `verb` to the short form.

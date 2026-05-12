@@ -10,56 +10,43 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "metadata",
-        "signature"
+        "proof"
       ],
       "properties": {
-        "metadata": {
+        "proof": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "proof"
+            "canonicalization",
+            "hash",
+            "signature_alg",
+            "signature",
+            "key_id",
+            "signer"
           ],
           "properties": {
-            "proof": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "canonicalization",
-                "hash_sha256"
-              ],
-              "properties": {
-                "canonicalization": {
-                  "const": "json.sorted_keys.v1"
-                },
-                "hash_sha256": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{64}$"
-                }
-              }
-            }
-          }
-        },
-        "signature": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "alg",
-            "kid",
-            "sig"
-          ],
-          "properties": {
-            "alg": {
+            "canonicalization": {
+              "const": "json.sorted_keys.v1"
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "signature_alg": {
               "const": "ed25519"
             },
-            "kid": {
-              "type": "string",
-              "minLength": 1
-            },
-            "sig": {
+            "signature": {
               "type": "string",
               "minLength": 16,
               "pattern": "^[A-Za-z0-9+/=]+$"
+            },
+            "key_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "signer": {
+              "type": "string",
+              "minLength": 1
             }
           }
         }

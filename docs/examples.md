@@ -57,7 +57,9 @@ After building:
 ```json
 {
   "signer": "runtime.commandlayer.eth",
-  "verb": "tool.get_weather",
+  "version": "1.0.0",
+  "family": "trust-verification",
+  "verb": "verify",
   "ts": "2026-04-29T14:22:00.000Z",
   "input": {
     "tool_name": "get_weather",
@@ -75,16 +77,13 @@ After building:
     "started_at": "2026-04-29T14:22:00.000Z",
     "completed_at": "2026-04-29T14:22:00.012Z"
   },
-  "metadata": {
-    "proof": {
-      "canonicalization": "json.sorted_keys.v1",
-      "hash_sha256": "..."
-    }
-  },
-  "signature": {
-    "alg": "ed25519",
-    "kid": "vC4WbcNoq2znSCiQ",
-    "sig": "..."
+  "proof": {
+    "canonicalization": "json.sorted_keys.v1",
+    "hash": "...",
+    "signature_alg": "ed25519",
+    "signature": "...",
+    "key_id": "vC4WbcNoq2znSCiQ",
+    "signer": "runtime.commandlayer.eth"
   }
 }
 ```
@@ -96,3 +95,6 @@ After building:
 - Missing `CL_AGENT` (if omitted, SDK/examples default to `runtime.commandlayer.eth`).
 - Verification returns `INVALID` if receipt input/output is modified after signing.
 - Network errors can occur when the public verifier is unreachable.
+
+
+Use `cl.wrap("verify", handler)` as the simple path. Advanced discovery/catalog entries can reference `clas.trust-verification.verify`; when passed to wrap, the SDK normalizes emitted receipt verbs to short form (`verify`).

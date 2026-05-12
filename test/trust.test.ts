@@ -25,6 +25,8 @@ async function generatePrivateKeyPem(): Promise<string> {
 function makeValidTrustRequest() {
   const now = new Date().toISOString();
   return {
+    version: "1.0.0",
+    family: "trust-verification",
     signer: "verifyagent.eth",
     verb: "verify",
     ts: now,
@@ -36,7 +38,7 @@ function makeValidTrustRequest() {
       started_at: now,
       completed_at: now,
     },
-  };
+  } as const;
 }
 
 test("valid request passes", () => {
@@ -73,7 +75,7 @@ test("invalid receipt fails", async () => {
     input: makeValidTrustRequest(),
   });
 
-  const result = validateTrustReceipt({ ...receipt, signature: { ...receipt.signature, alg: "rsa" } });
+  const result = validateTrustReceipt({ ...receipt, proof: { ...receipt.proof, signature_alg: "rsa" } });
   assert.equal(result.ok, false);
   assert.ok(result.errors.length > 0);
 });
@@ -88,7 +90,7 @@ test("assert variants throw", async () => {
     input: makeValidTrustRequest(),
   });
 
-  assert.throws(() => assertValidTrustReceipt({ ...receipt, metadata: {} }), /Invalid CLAS Trust Verification v1 receipt/);
+  assert.throws(() => assertValidTrustReceipt({ ...receipt, proof: { ...receipt.proof, hash: "nope" } }), /Invalid CLAS Trust Verification v1 receipt/);
 });
 
 
@@ -116,15 +118,12 @@ test("missing receipt proof fields fails", async () => {
 
   const invalid = {
     ...receipt,
-    metadata: {
-      ...receipt.metadata,
-      proof: { canonicalization: receipt.metadata.proof.canonicalization },
-    },
+    proof: { canonicalization: receipt.proof.canonicalization },
   };
 
   const result = validateTrustReceipt(invalid);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((err) => err.includes("/metadata/proof")));
+  assert.ok(result.errors.some((err) => err.includes("/proof")));
 });
 
 test("invalid canonicalization value fails", async () => {
@@ -137,12 +136,9 @@ test("invalid canonicalization value fails", async () => {
 
   const result = validateTrustReceipt({
     ...receipt,
-    metadata: {
-      ...receipt.metadata,
-      proof: { ...receipt.metadata.proof, canonicalization: "json.unsorted.v1" },
-    },
+    proof: { ...receipt.proof, canonicalization: "json.unsorted.v1" },
   });
 
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((err) => err.includes("/metadata/proof/canonicalization")));
+  assert.ok(result.errors.some((err) => err.includes("/proof/canonicalization")));
 });

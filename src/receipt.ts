@@ -2,6 +2,8 @@ import { canonicalize, type JsonValue } from "./canonicalize.js";
 import { importEd25519PrivateKeyFromPem, sha256Hex, signEd25519Base64 } from "./crypto.js";
 
 export interface ReceiptInput {
+  version: "1.0.0";
+  family: "trust-verification";
   signer: string;
   verb: string;
   ts: string;
@@ -17,21 +19,20 @@ export interface ReceiptInput {
 }
 
 export interface Receipt extends ReceiptInput {
-  metadata: {
-    proof: {
-      canonicalization: string;
-      hash_sha256: string;
-    };
-  };
-  signature: {
-    alg: "ed25519";
-    kid: string;
-    sig: string;
+  proof: {
+    canonicalization: string;
+    hash: string;
+    signature_alg: "ed25519";
+    signature: string;
+    key_id: string;
+    signer: string;
   };
 }
 
 export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
   return {
+    version: receipt.version,
+    family: receipt.family,
     signer: receipt.signer,
     verb: receipt.verb,
     input: receipt.input,
@@ -56,16 +57,13 @@ export async function createReceipt(params: {
 
   return {
     ...params.input,
-    metadata: {
-      proof: {
-        canonicalization: params.canonicalization,
-        hash_sha256: hash,
-      },
-    },
-    signature: {
-      alg: "ed25519",
-      kid: params.keyId,
-      sig,
+    proof: {
+      canonicalization: params.canonicalization,
+      hash,
+      signature_alg: "ed25519",
+      signature: sig,
+      key_id: params.keyId,
+      signer: params.input.signer,
     },
   };
 }
