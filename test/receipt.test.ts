@@ -28,15 +28,18 @@ test("wrapping an action creates a receipt with required fields", async () => {
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
-  const result = await cl.wrap("summarize", {
+  const result = await cl.wrap("verify", {
     input: { content: "hello world" },
     run: async () => "hello world",
   });
 
   assert.equal(result.output, "hello world");
-  assert.equal(result.receipt.verb, "summarize");
-  assert.ok(result.receipt.metadata.proof.hash_sha256.length > 0);
-  assert.ok(result.receipt.signature.sig.length > 0);
+  assert.equal(result.receipt.version, "1.0.0");
+  assert.equal(result.receipt.family, "trust-verification");
+  assert.equal(result.receipt.verb, "verify");
+  assert.ok(result.receipt.proof.hash.length > 0);
+  assert.equal(result.receipt.proof.signature_alg, "ed25519");
+  assert.ok(result.receipt.proof.signature.length > 0);
   assert.ok(result.receipt.execution.started_at);
   assert.ok(result.receipt.execution.completed_at);
 });
@@ -59,11 +62,11 @@ test("canonical payload excludes metadata and signature", async () => {
   assert.equal("signature" in canonicalPayload, false);
 
   const recomputedHash = await sha256Hex(canonicalize(canonicalPayload));
-  assert.equal(recomputedHash, receipt.metadata.proof.hash_sha256);
+  assert.equal(recomputedHash, receipt.proof.hash);
 
   const tamperedPayload = { ...canonicalPayload, output: { y: 99 } };
   const tamperedHash = await sha256Hex(canonicalize(tamperedPayload));
-  assert.notEqual(tamperedHash, receipt.metadata.proof.hash_sha256);
+  assert.notEqual(tamperedHash, receipt.proof.hash);
 });
 
 
@@ -84,8 +87,25 @@ test("wrap returns signed error receipt when wrapped agent throws", async () => 
 
   assert.equal(result.receipt.execution.status, "error");
   assert.match(result.receipt.execution.error ?? "", /simulated failure/);
-  assert.ok(result.receipt.metadata.proof.hash_sha256);
-  assert.ok(result.receipt.signature.sig);
+  assert.ok(result.receipt.proof.hash);
+  assert.ok(result.receipt.proof.signature);
+});
+
+
+test("fully-qualified trust capability verb normalizes to short verb", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "vC4WbcNoq2znSCiQ",
+    canonicalization: "json.sorted_keys." + "v" + "1",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  const { receipt } = await cl.wrap("clas.trust-verification.verify", {
+    input: { content: "hello world" },
+    run: async () => "hello world",
+  });
+
+  assert.equal(receipt.verb, "verify");
 });
 
 test("verification helper posts to verifierUrl", async () => {

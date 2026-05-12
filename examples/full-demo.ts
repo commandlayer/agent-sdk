@@ -24,10 +24,10 @@ console.log(JSON.stringify(result.receipt, null, 2));
 console.log("receipt.signer:", result.receipt.signer);
 console.log("receipt.verb:", result.receipt.verb);
 console.log(
-  "receipt.metadata.proof.hash_sha256:",
-  result.receipt.metadata.proof.hash_sha256,
+  "receipt.proof.hash:",
+  result.receipt.proof.hash,
 );
-console.log("receipt.signature.kid:", result.receipt.signature.kid);
+console.log("receipt.proof.key_id:", result.receipt.proof.key_id);
 console.log("");
 
 const statusOf = (value: unknown): string => {

@@ -28,6 +28,28 @@ export interface WrapResult<TOutput = unknown> {
   receipt: Receipt;
 }
 
+const TRUST_FAMILY = "trust-verification" as const;
+const TRUST_VERSION = "1.0.0" as const;
+const TRUST_VERBS = [
+  "verify",
+  "authenticate",
+  "authorize",
+  "attest",
+  "sign",
+  "permit",
+  "grant",
+  "approve",
+  "reject",
+  "endorse",
+] as const;
+
+export type TrustVerb = (typeof TRUST_VERBS)[number];
+
+export function normalizeTrustVerb(verb: string): string {
+  const prefix = `clas.${TRUST_FAMILY}.`;
+  return verb.startsWith(prefix) ? verb.slice(prefix.length) : verb;
+}
+
 export class CommandLayer {
   private readonly config: {
     signer: string;
@@ -99,6 +121,7 @@ export class CommandLayer {
       typeof fnOrOptions === "function" ? {} : fnOrOptions.input ?? {};
 
     const startedMs = Date.now();
+    const normalizedVerb = normalizeTrustVerb(verb);
     const startedAt = new Date().toISOString();
 
     try {
@@ -112,8 +135,10 @@ export class CommandLayer {
         privateKeyPem,
         canonicalization: this.config.canonicalization,
         input: {
+          version: TRUST_VERSION,
+          family: TRUST_FAMILY,
           signer,
-          verb,
+          verb: normalizedVerb,
           ts: startedAt,
           input: input as JsonValue,
           output: output as JsonValue,
@@ -136,8 +161,10 @@ export class CommandLayer {
         privateKeyPem,
         canonicalization: this.config.canonicalization,
         input: {
+          version: TRUST_VERSION,
+          family: TRUST_FAMILY,
           signer,
-          verb,
+          verb: normalizedVerb,
           ts: startedAt,
           input: input as JsonValue,
           output: null,

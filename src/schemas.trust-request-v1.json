@@ -4,6 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "version",
+    "family",
     "signer",
     "verb",
     "ts",
@@ -12,6 +14,12 @@
     "execution"
   ],
   "properties": {
+    "version": {
+      "const": "1.0.0"
+    },
+    "family": {
+      "const": "trust-verification"
+    },
     "signer": {
       "type": "string",
       "minLength": 1

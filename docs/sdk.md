@@ -74,7 +74,7 @@ The following trust-verification verbs are defined in [commandlayer/clas](https:
 
 `verify`, `authenticate`, `authorize`, `attest`, `sign`, `permit`, `grant`, `approve`, `reject`, `endorse`
 
-Custom verb namespaces (e.g. `tool.get_weather`) are permitted in receipts but are not part of the canonical CLAS verb set.
+Use `cl.wrap("verify", handler)` as the standard SDK path. For discovery/catalog metadata, use the canonical capability name format `clas.trust-verification.<verb>` (for example `clas.trust-verification.verify`).
 
 ## ENS discovery
 
