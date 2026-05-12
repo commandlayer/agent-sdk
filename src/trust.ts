@@ -1,6 +1,4 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 
@@ -9,16 +7,9 @@ export interface TrustValidationResult {
   errors: string[];
 }
 
-const here = dirname(fileURLToPath(import.meta.url));
-
-function loadSchemaFile(name: string): unknown {
-  const sourcePath = join(here, `${name}.json`);
-  const raw = readFileSync(sourcePath, "utf8");
-  return JSON.parse(raw);
-}
-
-const trustRequestSchema = loadSchemaFile("schemas.trust-request-v1");
-const trustReceiptSchema = loadSchemaFile("schemas.trust-receipt-v1") as Record<string, unknown>;
+const _require = createRequire(import.meta.url);
+const trustRequestSchema = _require("./schemas.trust-request-v1.json") as unknown;
+const trustReceiptSchema = _require("./schemas.trust-receipt-v1.json") as Record<string, unknown>;
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);

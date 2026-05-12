@@ -16,7 +16,10 @@ export interface CommandLayerConfig {
   verifierUrl?: string;
 }
 
-export const DEFAULT_VERIFIER_URL = "https://www.commandlayer.org/api/verify";
+export const DEFAULT_VERIFIER_URL = "https://runtime.commandlayer.org/verify";
+
+export const TRUST_FAMILY = "trust-verification" as const;
+export const TRUST_VERSION = "1.0.0" as const;
 
 export interface WrapOptions<TOutput = unknown> {
   input?: JsonValue;
@@ -28,8 +31,6 @@ export interface WrapResult<TOutput = unknown> {
   receipt: Receipt;
 }
 
-const TRUST_FAMILY = "trust-verification" as const;
-const TRUST_VERSION = "1.0.0" as const;
 const TRUST_VERBS = [
   "verify",
   "authenticate",
@@ -81,7 +82,7 @@ export class CommandLayer {
       ...config,
       signer,
       privateKeyPem,
-      canonicalization: config.canonicalization ?? "json.sorted_keys." + "v" + "1",
+      canonicalization: config.canonicalization ?? "json.sorted_keys.v1",
       verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
     };
 
