@@ -1,14 +1,10 @@
-# commandlayer Python SDK (scaffold)
+# CommandLayer Python SDK
 
-This is an early scaffold for a future Python SDK with intended parity to the TypeScript `@commandlayer/agent-sdk`.
+This directory is a placeholder for the Python SDK.
 
-## Status
+The Python SDK is not yet implemented. Until it ships, use the REST API directly:
 
-- Early structure only (not production-ready).
-- API surface is intentionally minimal and subject to change.
+- **Sign**: `POST https://runtime.commandlayer.org/sign`
+- **Verify**: `POST https://runtime.commandlayer.org/verify`
 
-## Roadmap
-
-- Receipt signing support.
-- Receipt verification helper support.
-- Behavior and config parity with the TypeScript SDK where practical.
+See the [CommandLayer Protocol](https://commandlayer.org/protocol) for the full receipt format specification.

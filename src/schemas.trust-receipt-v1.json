@@ -17,34 +17,30 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "canonicalization",
-            "hash",
-            "signature_alg",
+            "canonical",
+            "alg",
             "signature",
-            "key_id",
-            "signer"
+            "kid",
+            "signer_id"
           ],
           "properties": {
-            "canonicalization": {
+            "canonical": {
               "const": "json.sorted_keys.v1"
             },
-            "hash": {
+            "alg": {
               "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "signature_alg": {
-              "const": "ed25519"
+              "enum": ["ed25519"]
             },
             "signature": {
               "type": "string",
               "minLength": 16,
               "pattern": "^[A-Za-z0-9+/=]+$"
             },
-            "key_id": {
+            "kid": {
               "type": "string",
               "minLength": 1
             },
-            "signer": {
+            "signer_id": {
               "type": "string",
               "minLength": 1
             }

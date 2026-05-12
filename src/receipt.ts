@@ -1,5 +1,5 @@
 import { canonicalize, type JsonValue } from "./canonicalize.js";
-import { importEd25519PrivateKeyFromPem, sha256Hex, signEd25519Base64 } from "./crypto.js";
+import { importEd25519PrivateKeyFromPem, signEd25519Base64 } from "./crypto.js";
 
 export interface ReceiptInput {
   version: "1.0.0";
@@ -20,12 +20,11 @@ export interface ReceiptInput {
 
 export interface Receipt extends ReceiptInput {
   proof: {
-    canonicalization: string;
-    hash: string;
-    signature_alg: "ed25519";
+    canonical: string;
+    alg: "ed25519";
     signature: string;
-    key_id: string;
-    signer: string;
+    kid: string;
+    signer_id: string;
   };
 }
 
@@ -50,20 +49,18 @@ export async function createReceipt(params: {
 }): Promise<Receipt> {
   const canonicalPayload = canonicalPayloadFromReceiptInput(params.input);
   const canonical = canonicalize(canonicalPayload);
-  const hash = await sha256Hex(canonical);
 
   const privateKey = await importEd25519PrivateKeyFromPem(params.privateKeyPem);
-  const sig = await signEd25519Base64(privateKey, hash);
+  const sig = await signEd25519Base64(privateKey, canonical);
 
   return {
     ...params.input,
     proof: {
-      canonicalization: params.canonicalization,
-      hash,
-      signature_alg: "ed25519",
+      canonical: params.canonicalization,
+      alg: "ed25519",
       signature: sig,
-      key_id: params.keyId,
-      signer: params.input.signer,
+      kid: params.keyId,
+      signer_id: params.input.signer,
     },
   };
 }

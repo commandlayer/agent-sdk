@@ -75,7 +75,7 @@ test("invalid receipt fails", async () => {
     input: makeValidTrustRequest(),
   });
 
-  const result = validateTrustReceipt({ ...receipt, proof: { ...receipt.proof, signature_alg: "rsa" } });
+  const result = validateTrustReceipt({ ...receipt, proof: { ...receipt.proof, alg: "rsa" } });
   assert.equal(result.ok, false);
   assert.ok(result.errors.length > 0);
 });
@@ -90,9 +90,11 @@ test("assert variants throw", async () => {
     input: makeValidTrustRequest(),
   });
 
-  assert.throws(() => assertValidTrustReceipt({ ...receipt, proof: { ...receipt.proof, hash: "nope" } }), /Invalid CLAS Trust Verification v1 receipt/);
+  assert.throws(
+    () => assertValidTrustReceipt({ ...receipt, proof: { ...receipt.proof, signature: "nope" } }),
+    /Invalid CLAS Trust Verification v1 receipt/,
+  );
 });
-
 
 test("invalid date-time fails", () => {
   const request = { ...makeValidTrustRequest(), ts: "not-a-date" };
@@ -118,7 +120,7 @@ test("missing receipt proof fields fails", async () => {
 
   const invalid = {
     ...receipt,
-    proof: { canonicalization: receipt.proof.canonicalization },
+    proof: { canonical: receipt.proof.canonical },
   };
 
   const result = validateTrustReceipt(invalid);
@@ -136,9 +138,9 @@ test("invalid canonicalization value fails", async () => {
 
   const result = validateTrustReceipt({
     ...receipt,
-    proof: { ...receipt.proof, canonicalization: "json.unsorted.v1" },
+    proof: { ...receipt.proof, canonical: "json.unsorted.v1" },
   });
 
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((err) => err.includes("/proof/canonicalization")));
+  assert.ok(result.errors.some((err) => err.includes("/proof/canonical")));
 });
