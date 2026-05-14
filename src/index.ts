@@ -52,9 +52,26 @@ const TRUST_VERBS = [
 
 export type TrustVerb = (typeof TRUST_VERBS)[number];
 
+const TRUST_VERB_SET: ReadonlySet<string> = new Set(TRUST_VERBS);
+
 export function normalizeTrustVerb(verb: string): string {
   const prefix = `clas.${TRUST_FAMILY}.`;
   return verb.startsWith(prefix) ? verb.slice(prefix.length) : verb;
+}
+
+/**
+ * Normalize and validate a trust verb. Throws if the resulting short verb is
+ * not a member of the schema-defined TRUST_VERBS enum.
+ */
+function resolveAndValidateTrustVerb(verb: string): string {
+  const normalized = normalizeTrustVerb(verb);
+  if (!TRUST_VERB_SET.has(normalized)) {
+    throw new Error(
+      `Invalid trust verb "${verb}". Must be one of: ${TRUST_VERBS.join(", ")}. ` +
+      `Fully-qualified names like "clas.trust-verification.verify" are also accepted.`,
+    );
+  }
+  return normalized;
 }
 
 export class CommandLayer {
@@ -124,7 +141,9 @@ export class CommandLayer {
       typeof fnOrOptions === "function" ? {} : fnOrOptions.input ?? {};
 
     const startedMs = Date.now();
-    const normalizedVerb = normalizeTrustVerb(verb);
+    // Validate verb before running the wrapped function so callers get a
+    // synchronous, descriptive error rather than a non-schema-valid receipt.
+    const normalizedVerb = resolveAndValidateTrustVerb(verb);
     const startedAt = new Date().toISOString();
 
     try {

@@ -4,6 +4,7 @@ import { webcrypto } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
 import { CommandLayer } from "../src/index.js";
+import { validateTrustReceipt } from "../src/index.js";
 import { canonicalize } from "../src/canonicalize.js";
 import { canonicalPayloadFromReceiptInput } from "../src/receipt.js";
 
@@ -47,6 +48,35 @@ test("wrapping an action creates a receipt with required fields", async () => {
   assert.ok(result.receipt.execution.completed_at);
 });
 
+test("wrap produces a schema-valid receipt (round-trip)", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "vC4WbcNoq2znSCiQ",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  const result = await cl.wrap("verify", {
+    input: { content: "hello world" },
+    run: async () => ({ approved: true }),
+  });
+
+  const validation = validateTrustReceipt(result.receipt);
+  assert.equal(validation.ok, true, `Receipt failed schema validation: ${validation.errors.join("; ")}`);
+});
+
+test("wrap rejects an unrecognized verb before running the wrapped function", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "vC4WbcNoq2znSCiQ",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  await assert.rejects(
+    () => cl.wrap("summarize", async () => "should not run"),
+    /Invalid trust verb/,
+  );
+});
+
 test("signature is verifiable over raw canonical payload bytes", async () => {
   const { pem, publicKey } = await generateKeyPair();
 
@@ -56,7 +86,7 @@ test("signature is verifiable over raw canonical payload bytes", async () => {
     privateKeyPem: pem,
   });
 
-  const { receipt } = await cl.wrap("summarize", {
+  const { receipt } = await cl.wrap("authenticate", {
     input: { x: 1 },
     run: async () => ({ y: 2 }),
   });
@@ -92,7 +122,7 @@ test("wrap returns signed error receipt when wrapped agent throws", async () => 
     privateKeyPem: await generatePrivateKeyPem(),
   });
 
-  const result = await cl.wrap("summarize", {
+  const result = await cl.wrap("authenticate", {
     input: { content: "hello" },
     run: async () => {
       throw new Error("simulated failure");
@@ -103,6 +133,24 @@ test("wrap returns signed error receipt when wrapped agent throws", async () => 
   assert.match(result.receipt.execution.error ?? "", /simulated failure/);
   assert.ok(result.receipt.proof.signature);
   assert.equal(result.receipt.proof.alg, "ed25519");
+});
+
+test("error receipt is also schema-valid", async () => {
+  const cl = new CommandLayer({
+    signer: "verifyagent.eth",
+    keyId: "vC4WbcNoq2znSCiQ",
+    privateKeyPem: await generatePrivateKeyPem(),
+  });
+
+  const result = await cl.wrap("authenticate", {
+    input: { content: "hello" },
+    run: async () => {
+      throw new Error("simulated failure");
+    },
+  });
+
+  const validation = validateTrustReceipt(result.receipt);
+  assert.equal(validation.ok, true, `Error receipt failed schema validation: ${validation.errors.join("; ")}`);
 });
 
 test("fully-qualified trust capability verb normalizes to short verb", async () => {
@@ -144,7 +192,7 @@ test("verification helper posts to verifierUrl", async () => {
     verifierUrl,
   });
 
-  const { receipt } = await cl.wrap("summarize", {
+  const { receipt } = await cl.wrap("verify", {
     input: { content: "hello" },
     run: async () => "hello",
   });
