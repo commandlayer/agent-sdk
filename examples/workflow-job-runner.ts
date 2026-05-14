@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { CommandLayer } from "../src/index.js";
 
 const privateKeyPem = process.env.CL_PRIVATE_KEY_PEM;
@@ -14,8 +15,8 @@ const result = await cl.wrap("workflow.run", async () => ({
   steps_completed: ["lead_received", "send_followup", "update_crm"],
 }));
 
-console.log("output", result.output);
-console.log("receipt", JSON.stringify(result.receipt, null, 2));
+process.stdout.write(`output: ${JSON.stringify(result.output)}\n`);
+process.stdout.write(`receipt: ${JSON.stringify(result.receipt, null, 2)}\n`);
 
 const verification = await cl.verify(result.receipt);
-console.log("verification_status", verification);
+process.stdout.write(`verification_status: ${JSON.stringify(verification)}\n`);

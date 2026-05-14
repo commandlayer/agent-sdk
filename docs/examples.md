@@ -13,6 +13,7 @@ All examples are dependency-free and intentionally use mocked execution (no real
 - `CL_PRIVATE_KEY_PEM`
 - `CL_KEY_ID`
 - `CL_AGENT` (defaults to `runtime.commandlayer.eth`)
+- `CL_VERIFIER_URL` (optional, defaults to `https://www.commandlayer.org/api/verify`)
 
 The demo signer/key id match the public VerifyAgent demo. For your own agent, replace these with your ENS signer and key id.
 
@@ -78,12 +79,11 @@ After building:
     "completed_at": "2026-04-29T14:22:00.012Z"
   },
   "proof": {
-    "canonicalization": "json.sorted_keys.v1",
-    "hash": "...",
-    "signature_alg": "ed25519",
-    "signature": "...",
-    "key_id": "vC4WbcNoq2znSCiQ",
-    "signer": "runtime.commandlayer.eth"
+    "canonical": "json.sorted_keys.v1",
+    "alg": "ed25519",
+    "signature": "<base64-encoded-ed25519-signature>",
+    "kid": "vC4WbcNoq2znSCiQ",
+    "signer_id": "runtime.commandlayer.eth"
   }
 }
 ```

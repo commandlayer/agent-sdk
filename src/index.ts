@@ -31,6 +31,12 @@ export interface WrapResult<TOutput = unknown> {
   receipt: Receipt;
 }
 
+export interface VerifyResult {
+  ok?: boolean;
+  status?: string;
+  [key: string]: unknown;
+}
+
 const TRUST_VERBS = [
   "verify",
   "authenticate",
@@ -65,10 +71,6 @@ export class CommandLayer {
   constructor(config: CommandLayerConfig) {
     const signer = config.agent ?? config.signer;
     const privateKeyPem = config.privateKeyPem ?? config.privateKey;
-
-    if (config.privateKey && !config.privateKeyPem) {
-      console.warn("[CommandLayer] `privateKey` is deprecated. Use `privateKeyPem` instead.");
-    }
 
     if (!signer) {
       throw new Error("Missing signer (agent or signer required)");
@@ -186,12 +188,12 @@ export class CommandLayer {
     }
   }
 
-  async verify(receipt: Receipt): Promise<unknown> {
+  async verify(receipt: Receipt): Promise<VerifyResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
 
     try {
-      const response = await fetch(this.verifierUrl ?? DEFAULT_VERIFIER_URL, {
+      const response = await fetch(this.verifierUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ receipt }),
@@ -205,7 +207,7 @@ export class CommandLayer {
         );
       }
 
-      return response.json();
+      return response.json() as Promise<VerifyResult>;
     } finally {
       clearTimeout(timeout);
     }
