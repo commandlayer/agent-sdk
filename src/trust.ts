@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import Ajv from "ajv";
+import Ajv, { type ErrorObject } from "ajv";
 import addFormats from "ajv-formats";
 
 export interface TrustValidationResult {
@@ -8,7 +8,7 @@ export interface TrustValidationResult {
 }
 
 const _require = createRequire(import.meta.url);
-const trustRequestSchema = _require("./schemas.trust-request-v1.json") as unknown;
+const trustRequestSchema = _require("./schemas.trust-request-v1.json") as Record<string, unknown>;
 const trustReceiptSchema = _require("./schemas.trust-receipt-v1.json") as Record<string, unknown>;
 
 const ajv = new Ajv({ allErrors: true, strict: false });
@@ -18,8 +18,8 @@ ajv.addSchema(trustRequestSchema, "trust-request-v1");
 const validateTrustRequestSchema = ajv.compile(trustRequestSchema);
 const validateTrustReceiptSchema = ajv.compile(trustReceiptSchema);
 
-function formatErrors(errors: typeof validateTrustRequestSchema.errors): string[] {
-  return (errors ?? []).map((error: { instancePath?: string; message?: string }) => {
+function formatErrors(errors: ErrorObject[] | null | undefined): string[] {
+  return (errors ?? []).map((error: ErrorObject) => {
     const path = error.instancePath || "/";
     return `${path} ${error.message ?? "is invalid"}`;
   });

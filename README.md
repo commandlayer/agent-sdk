@@ -10,14 +10,6 @@ Wrap your agent. Emit a signed receipt. Verify through CommandLayer.
 npm install @commandlayer/agent-sdk
 ```
 
-> Temporary caveat (as of May 9, 2026): package availability on npm may vary by registry policy/account permissions.
-> If `npm install @commandlayer/agent-sdk` fails in your environment, use local development install:
-
-```bash
-npm install
-npm run build
-```
-
 ## Quickstart
 
 ```ts
@@ -38,7 +30,7 @@ const local = validateTrustReceipt(receipt); // schema only
 if (!local.ok) throw new Error(local.errors.join("; "));
 
 const remote = await cl.verify(receipt); // cryptographic verification
-console.log({ output, receipt, remote });
+process.stdout.write(JSON.stringify({ output, receipt, remote }) + "\n");
 ```
 
 ## Wrap your agent
@@ -73,10 +65,10 @@ import {
 } from "@commandlayer/agent-sdk";
 
 const requestResult = validateTrustRequest(requestPayload);
-if (!requestResult.ok) console.error(requestResult.errors);
+if (!requestResult.ok) process.stderr.write(requestResult.errors.join("\n") + "\n");
 
 const receiptResult = validateTrustReceipt(receiptPayload);
-if (!receiptResult.ok) console.error(receiptResult.errors);
+if (!receiptResult.ok) process.stderr.write(receiptResult.errors.join("\n") + "\n");
 
 assertValidTrustRequest(requestPayload);
 assertValidTrustReceipt(receiptPayload);

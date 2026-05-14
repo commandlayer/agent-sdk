@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { CommandLayer } from "../src/index.js";
 
 const privateKeyPem = process.env.CL_PRIVATE_KEY_PEM;
@@ -15,20 +16,15 @@ const result = await cl.wrap("summarize", async () => {
   return { summary: "hello world" };
 });
 
-console.log("Agent output");
-console.log(JSON.stringify(result.output, null, 2));
-console.log("");
+process.stdout.write("Agent output\n");
+process.stdout.write(`${JSON.stringify(result.output, null, 2)}\n\n`);
 
-console.log("Signed receipt");
-console.log(JSON.stringify(result.receipt, null, 2));
-console.log("receipt.signer:", result.receipt.signer);
-console.log("receipt.verb:", result.receipt.verb);
-console.log(
-  "receipt.proof.hash:",
-  result.receipt.proof.hash,
-);
-console.log("receipt.proof.key_id:", result.receipt.proof.key_id);
-console.log("");
+process.stdout.write("Signed receipt\n");
+process.stdout.write(`${JSON.stringify(result.receipt, null, 2)}\n`);
+process.stdout.write(`receipt.signer: ${result.receipt.signer}\n`);
+process.stdout.write(`receipt.verb: ${result.receipt.verb}\n`);
+process.stdout.write(`receipt.proof.kid: ${result.receipt.proof.kid}\n`);
+process.stdout.write(`receipt.proof.signer_id: ${result.receipt.proof.signer_id}\n\n`);
 
 const statusOf = (value: unknown): string => {
   if (!value || typeof value !== "object") {
@@ -41,7 +37,7 @@ const statusOf = (value: unknown): string => {
 
 const verified = await cl.verify(result.receipt);
 const verifiedStatus = statusOf(verified);
-console.log(`Original receipt verification: ${verifiedStatus === "VERIFIED" ? "VERIFIED" : verifiedStatus}`);
+process.stdout.write(`Original receipt verification: ${verifiedStatus === "VERIFIED" ? "VERIFIED" : verifiedStatus}\n`);
 
 const tamperedReceipt = structuredClone(result.receipt);
 
@@ -53,6 +49,6 @@ if (!tamperedReceipt.output || typeof tamperedReceipt.output !== "object" || Arr
 
 const tampered = await cl.verify(tamperedReceipt);
 const tamperedStatus = statusOf(tampered);
-console.log(`Tampered receipt verification: ${tamperedStatus === "INVALID" ? "INVALID" : tamperedStatus}`);
+process.stdout.write(`Tampered receipt verification: ${tamperedStatus === "INVALID" ? "INVALID" : tamperedStatus}\n`);
 
-console.log("\nAgents don’t make claims — they produce proof.");
+process.stdout.write("\nAgents don't make claims — they produce proof.\n");

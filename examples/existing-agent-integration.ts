@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { CommandLayer } from "../src/index.js";
 
 const privateKeyPem = process.env.CL_PRIVATE_KEY_PEM;
@@ -24,12 +25,12 @@ const input = {
   context: "release build green",
 };
 
-console.log("Already have an agent? Wrap the action, don't rewrite the agent.");
+process.stdout.write("Already have an agent? Wrap the action, don't rewrite the agent.\n");
 
 const result = await cl.wrap("agent.execute", async () => existingAgent.run(input));
 
 const verification = await cl.verify(result.receipt);
 
-console.log("output", result.output);
-console.log("receipt", JSON.stringify(result.receipt, null, 2));
-console.log("verification_status", verification);
+process.stdout.write(`output: ${JSON.stringify(result.output)}\n`);
+process.stdout.write(`receipt: ${JSON.stringify(result.receipt, null, 2)}\n`);
+process.stdout.write(`verification_status: ${JSON.stringify(verification)}\n`);

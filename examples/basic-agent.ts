@@ -14,13 +14,13 @@ const cl = new CommandLayer({
   agent: process.env.CL_AGENT ?? "runtime.commandlayer.eth",
   keyId: process.env.CL_KEY_ID ?? "vC4WbcNoq2znSCiQ",
   privateKeyPem: process.env.CL_PRIVATE_KEY_PEM,
-  verifierUrl: "https://www.commandlayer.org/api/verify",
+  verifierUrl: process.env.CL_VERIFIER_URL ?? "https://www.commandlayer.org/api/verify",
 });
 
 const result = await cl.wrap("summarize", async () => fakeSummarizeAgent("hello world"));
 
-console.log("output", result.output);
-console.log("receipt", JSON.stringify(result.receipt, null, 2));
+process.stdout.write(`output: ${JSON.stringify(result.output)}\n`);
+process.stdout.write(`receipt: ${JSON.stringify(result.receipt, null, 2)}\n`);
 
 const verified = await cl.verify(result.receipt);
-console.log("verified", verified);
+process.stdout.write(`verified: ${JSON.stringify(verified)}\n`);

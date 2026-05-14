@@ -2,51 +2,113 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://commandlayer.org/schemas/trust-receipt-v1.json",
   "type": "object",
-  "allOf": [
-    {
-      "$ref": "trust-request-v1"
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "family",
+    "signer",
+    "verb",
+    "ts",
+    "input",
+    "output",
+    "execution",
+    "proof"
+  ],
+  "properties": {
+    "version": {
+      "const": "1.0.0"
     },
-    {
+    "family": {
+      "const": "trust-verification"
+    },
+    "signer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verb": {
+      "type": "string",
+      "enum": [
+        "verify",
+        "authenticate",
+        "authorize",
+        "attest",
+        "sign",
+        "permit",
+        "grant",
+        "approve",
+        "reject",
+        "endorse"
+      ]
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": true,
+    "output": true,
+    "execution": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "proof"
+        "status",
+        "duration_ms",
+        "started_at",
+        "completed_at"
       ],
       "properties": {
-        "proof": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "canonical",
-            "alg",
-            "signature",
-            "kid",
-            "signer_id"
-          ],
-          "properties": {
-            "canonical": {
-              "const": "json.sorted_keys.v1"
-            },
-            "alg": {
-              "type": "string",
-              "enum": ["ed25519"]
-            },
-            "signature": {
-              "type": "string",
-              "minLength": 16,
-              "pattern": "^[A-Za-z0-9+/=]+$"
-            },
-            "kid": {
-              "type": "string",
-              "minLength": 1
-            },
-            "signer_id": {
-              "type": "string",
-              "minLength": 1
-            }
-          }
+        "status": {
+          "type": "string",
+          "enum": ["ok", "error"]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical",
+        "alg",
+        "signature",
+        "kid",
+        "signer_id"
+      ],
+      "properties": {
+        "canonical": {
+          "const": "json.sorted_keys.v1"
+        },
+        "alg": {
+          "type": "string",
+          "enum": ["ed25519"]
+        },
+        "signature": {
+          "type": "string",
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9+/=]+$"
+        },
+        "kid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signer_id": {
+          "type": "string",
+          "minLength": 1
         }
       }
     }
-  ]
+  }
 }
