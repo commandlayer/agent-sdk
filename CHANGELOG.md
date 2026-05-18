@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-05-18
+
+### Changed
+
+- Emits canonical `@commandlayer/runtime-core` receipts.
+- Uses the `metadata.proof` envelope for receipt proofs.
+- Delegates signing to `@commandlayer/runtime-core`.
+- Verifies SDK-emitted receipts with `@commandlayer/runtime-core` in tests.
+- Build fixes: Ajv 2020 compatibility and cross-platform schema copy handling.
+- No publishing was performed in this PR.
+
 ## [1.1.0] - 2026-05-12
 
 ### Breaking Changes
