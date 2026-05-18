@@ -1,8 +1,6 @@
 import {
   signCommandLayerReceipt,
-  type CommandLayerCanonicalization,
   type CommandLayerReceipt,
-  type SignCommandLayerReceiptParams,
 } from "@commandlayer/runtime-core";
 import type { JsonValue } from "./canonicalize.js";
 
@@ -23,7 +21,7 @@ export interface ReceiptInput {
   };
 }
 
-export type Receipt = CommandLayerReceipt<ReceiptInput>;
+export type Receipt = CommandLayerReceipt;
 
 export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
   return {
@@ -41,13 +39,11 @@ export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
 export async function createReceipt(params: {
   keyId: string;
   privateKeyPem: string;
-  canonicalization: CommandLayerCanonicalization;
+  canonicalization: string;
   input: ReceiptInput;
 }): Promise<Receipt> {
-  return signCommandLayerReceipt({
-    receipt: params.input,
+  return signCommandLayerReceipt(params.input, {
     privateKeyPem: params.privateKeyPem,
     kid: params.keyId,
-    canonicalization: params.canonicalization,
-  } as SignCommandLayerReceiptParams<ReceiptInput>);
+  });
 }
