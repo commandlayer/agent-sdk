@@ -35,7 +35,9 @@ export interface CanonicalProofEnvelope {
 }
 
 export type Receipt = ReceiptInput & {
-  proof: CanonicalProofEnvelope;
+  metadata: {
+    proof: CanonicalProofEnvelope;
+  };
 };
 
 export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
