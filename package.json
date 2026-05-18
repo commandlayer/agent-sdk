@@ -19,7 +19,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && mkdir -p dist/src && cp src/schemas.trust-*.json dist/src/",
+    "build": "tsc -p tsconfig.json && node scripts/copy-schemas.mjs",
     "test": "node --test dist/test/receipt.test.js dist/test/trust.test.js",
     "pretest": "npm run build",
     "example:basic": "node dist/examples/basic-agent.js",
