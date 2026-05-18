@@ -80,7 +80,7 @@ export class CommandLayer {
     signer: string;
     privateKeyPem: string;
     keyId: string;
-    canonicalization: string;
+    canonicalization: typeof DEFAULT_CANONICALIZATION;
     verifierUrl: string;
   };
 

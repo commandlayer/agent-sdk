@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
-import { verifyCommandLayerReceipt } from "@commandlayer/runtime-core";
+import { verifyCommandLayerReceipt, type CommandLayerReceipt } from "@commandlayer/runtime-core";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
 import { CommandLayer } from "../src/index.js";
@@ -50,7 +50,7 @@ test("wrapping an action creates a receipt with required fields", async () => {
   assert.equal(result.receipt.proof.signature.alg, "Ed25519");
   assert.ok(result.receipt.proof.signature.value.length > 0);
   assert.equal(result.receipt.proof.signature.kid, "vC4WbcNoq2znSCiQ");
-  assert.equal((result.receipt as Record<string, unknown>).signature_b64, undefined);
+  assert.equal((result.receipt as unknown as Record<string, unknown>).signature_b64, undefined);
   assert.ok(result.receipt.execution.started_at);
   assert.ok(result.receipt.execution.completed_at);
 });
@@ -100,11 +100,11 @@ test("emitted receipt verifies with runtime-core and tampering is invalid", asyn
     run: async () => ({ y: 2 }),
   });
 
-  const verification = await verifyCommandLayerReceipt(receipt, { publicKeyPemOrDer: publicKeyPem });
+  const verification = await verifyCommandLayerReceipt(receipt as unknown as CommandLayerReceipt, { publicKeyPemOrDer: publicKeyPem });
   assert.equal(verification.status, "VERIFIED");
 
   const tampered = { ...receipt, output: { y: 99 } };
-  const tamperedVerification = await verifyCommandLayerReceipt(tampered, { publicKeyPemOrDer: publicKeyPem });
+  const tamperedVerification = await verifyCommandLayerReceipt(tampered as unknown as CommandLayerReceipt, { publicKeyPemOrDer: publicKeyPem });
   assert.equal(tamperedVerification.status, "INVALID");
 });
 
