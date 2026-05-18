@@ -1,11 +1,16 @@
 import { createRequire } from "node:module";
 import { Ajv, type ErrorObject } from "ajv";
-import { default as addFormats } from "ajv-formats";
+import * as addFormatsModule from "ajv-formats";
 
 export interface TrustValidationResult {
   ok: boolean;
   errors: string[];
 }
+
+type AddFormats = (ajv: Ajv) => Ajv;
+
+const addFormats = (addFormatsModule as unknown as { default?: AddFormats }).default
+  ?? (addFormatsModule as unknown as AddFormats);
 
 const _require = createRequire(import.meta.url);
 const trustRequestSchema = _require("./schemas.trust-request-v1.json") as Record<string, unknown>;
