@@ -1,12 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { webcrypto } from "node:crypto";
+import { verifyCommandLayerReceipt } from "@commandlayer/runtime-core";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
 import { CommandLayer } from "../src/index.js";
 import { validateTrustReceipt } from "../src/index.js";
-import { canonicalize } from "../src/canonicalize.js";
-import { canonicalPayloadFromReceiptInput } from "../src/receipt.js";
 
 function toPem(pkcs8: ArrayBuffer): string {
   const b64 = Buffer.from(pkcs8).toString("base64");
@@ -40,10 +39,12 @@ test("wrapping an action creates a receipt with required fields", async () => {
   assert.equal(result.receipt.version, "1.0.0");
   assert.equal(result.receipt.family, "trust-verification");
   assert.equal(result.receipt.verb, "verify");
-  assert.equal(result.receipt.proof.alg, "ed25519");
-  assert.ok(result.receipt.proof.signature.length > 0);
-  assert.equal(result.receipt.proof.kid, "vC4WbcNoq2znSCiQ");
-  assert.equal(result.receipt.proof.signer_id, "verifyagent.eth");
+  assert.equal(result.receipt.proof.canonicalization, "json.sorted_keys.v1");
+  assert.equal(result.receipt.proof.hash.alg, "SHA-256");
+  assert.equal(result.receipt.proof.signature.alg, "Ed25519");
+  assert.ok(result.receipt.proof.signature.value.length > 0);
+  assert.equal(result.receipt.proof.signature.kid, "vC4WbcNoq2znSCiQ");
+  assert.equal((result.receipt as Record<string, unknown>).signature_b64, undefined);
   assert.ok(result.receipt.execution.started_at);
   assert.ok(result.receipt.execution.completed_at);
 });
@@ -77,7 +78,7 @@ test("wrap rejects an unrecognized verb before running the wrapped function", as
   );
 });
 
-test("signature is verifiable over raw canonical payload bytes", async () => {
+test("emitted receipt verifies with runtime-core and tampering is invalid", async () => {
   const { pem, publicKey } = await generateKeyPair();
 
   const cl = new CommandLayer({
@@ -91,28 +92,12 @@ test("signature is verifiable over raw canonical payload bytes", async () => {
     run: async () => ({ y: 2 }),
   });
 
-  const canonicalPayload = canonicalPayloadFromReceiptInput(receipt);
-  assert.equal("proof" in canonicalPayload, false, "proof must not be in canonical payload");
+  const verification = await verifyCommandLayerReceipt({ receipt });
+  assert.equal(verification.status, "VALID");
 
-  const canonical = canonicalize(canonicalPayload);
-  const sig = Buffer.from(receipt.proof.signature, "base64");
-
-  const ok = await webcrypto.subtle.verify(
-    "Ed25519",
-    publicKey,
-    sig,
-    new TextEncoder().encode(canonical),
-  );
-  assert.equal(ok, true, "signature must verify over raw canonical payload bytes");
-
-  const tamperedPayload = { ...canonicalPayload, output: { y: 99 } };
-  const tamperedOk = await webcrypto.subtle.verify(
-    "Ed25519",
-    publicKey,
-    sig,
-    new TextEncoder().encode(canonicalize(tamperedPayload)),
-  );
-  assert.equal(tamperedOk, false, "tampered payload must not verify");
+  const tampered = { ...receipt, output: { y: 99 } };
+  const tamperedVerification = await verifyCommandLayerReceipt({ receipt: tampered });
+  assert.equal(tamperedVerification.status, "INVALID");
 });
 
 test("wrap returns signed error receipt when wrapped agent throws", async () => {
@@ -131,8 +116,8 @@ test("wrap returns signed error receipt when wrapped agent throws", async () => 
 
   assert.equal(result.receipt.execution.status, "error");
   assert.match(result.receipt.execution.error ?? "", /simulated failure/);
-  assert.ok(result.receipt.proof.signature);
-  assert.equal(result.receipt.proof.alg, "ed25519");
+  assert.ok(result.receipt.proof.signature.value);
+  assert.equal(result.receipt.proof.signature.alg, "Ed25519");
 });
 
 test("error receipt is also schema-valid", async () => {
