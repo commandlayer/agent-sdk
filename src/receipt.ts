@@ -1,5 +1,10 @@
-import { canonicalize, type JsonValue } from "./canonicalize.js";
-import { importEd25519PrivateKeyFromPem, signEd25519Base64 } from "./crypto.js";
+import {
+  signCommandLayerReceipt,
+  type CommandLayerCanonicalization,
+  type CommandLayerReceipt,
+  type SignCommandLayerReceiptParams,
+} from "@commandlayer/runtime-core";
+import type { JsonValue } from "./canonicalize.js";
 
 export interface ReceiptInput {
   version: "1.0.0";
@@ -18,15 +23,7 @@ export interface ReceiptInput {
   };
 }
 
-export interface Receipt extends ReceiptInput {
-  proof: {
-    canonical: string;
-    alg: "ed25519";
-    signature: string;
-    kid: string;
-    signer_id: string;
-  };
-}
+export type Receipt = CommandLayerReceipt<ReceiptInput>;
 
 export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
   return {
@@ -44,23 +41,13 @@ export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
 export async function createReceipt(params: {
   keyId: string;
   privateKeyPem: string;
-  canonicalization: string;
+  canonicalization: CommandLayerCanonicalization;
   input: ReceiptInput;
 }): Promise<Receipt> {
-  const canonicalPayload = canonicalPayloadFromReceiptInput(params.input);
-  const canonical = canonicalize(canonicalPayload);
-
-  const privateKey = await importEd25519PrivateKeyFromPem(params.privateKeyPem);
-  const sig = await signEd25519Base64(privateKey, canonical);
-
-  return {
-    ...params.input,
-    proof: {
-      canonical: params.canonicalization,
-      alg: "ed25519",
-      signature: sig,
-      kid: params.keyId,
-      signer_id: params.input.signer,
-    },
-  };
+  return signCommandLayerReceipt({
+    receipt: params.input,
+    privateKeyPem: params.privateKeyPem,
+    kid: params.keyId,
+    canonicalization: params.canonicalization,
+  } as SignCommandLayerReceiptParams<ReceiptInput>);
 }

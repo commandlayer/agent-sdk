@@ -23,8 +23,8 @@ process.stdout.write("Signed receipt\n");
 process.stdout.write(`${JSON.stringify(result.receipt, null, 2)}\n`);
 process.stdout.write(`receipt.signer: ${result.receipt.signer}\n`);
 process.stdout.write(`receipt.verb: ${result.receipt.verb}\n`);
-process.stdout.write(`receipt.proof.kid: ${result.receipt.proof.kid}\n`);
-process.stdout.write(`receipt.proof.signer_id: ${result.receipt.proof.signer_id}\n\n`);
+process.stdout.write(`receipt.proof.signature.kid: ${result.receipt.proof.signature.kid}\n`);
+process.stdout.write(`receipt.signer: ${result.receipt.signer}\n\n`);
 
 const statusOf = (value: unknown): string => {
   if (!value || typeof value !== "object") {

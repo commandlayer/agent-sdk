@@ -95,4 +95,4 @@ MIT
 
 ### Verb conventions
 
-Use `cl.wrap("verify", handler)` for normal SDK usage. For discovery/catalog metadata, advertise the canonical capability name `clas.trust-verification.verify`. The SDK also accepts fully-qualified trust capability inputs in `wrap(...)` and normalizes emitted receipt `verb` to the short form.
+Use `cl.wrap("verify", handler)` for normal SDK usage. For discovery/catalog metadata, advertise the canonical capability name `clas.trust-verification.verify`. The SDK also accepts fully-qualified trust capability inputs in `wrap(...)` and normalizes emitted receipt `verb` to the short form and emits canonical metadata proof envelopes.

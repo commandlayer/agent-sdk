@@ -58,7 +58,10 @@
       "properties": {
         "status": {
           "type": "string",
-          "enum": ["ok", "error"]
+          "enum": [
+            "ok",
+            "error"
+          ]
         },
         "duration_ms": {
           "type": "integer",
@@ -81,32 +84,54 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "canonical",
-        "alg",
-        "signature",
-        "kid",
-        "signer_id"
+        "canonicalization",
+        "hash",
+        "signature"
       ],
       "properties": {
-        "canonical": {
+        "canonicalization": {
           "const": "json.sorted_keys.v1"
         },
-        "alg": {
-          "type": "string",
-          "enum": ["ed25519"]
+        "hash": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "value"
+          ],
+          "properties": {
+            "alg": {
+              "const": "SHA-256"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 16,
+              "pattern": "^[A-Za-z0-9+/=]+$"
+            }
+          }
         },
         "signature": {
-          "type": "string",
-          "minLength": 16,
-          "pattern": "^[A-Za-z0-9+/=]+$"
-        },
-        "kid": {
-          "type": "string",
-          "minLength": 1
-        },
-        "signer_id": {
-          "type": "string",
-          "minLength": 1
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alg",
+            "value",
+            "kid"
+          ],
+          "properties": {
+            "alg": {
+              "const": "Ed25519"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 16,
+              "pattern": "^[A-Za-z0-9+/=]+$"
+            },
+            "kid": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     }
