@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
-import Ajv, { type ErrorObject } from "ajv";
-import addFormats from "ajv-formats";
+import { Ajv, type ErrorObject } from "ajv";
+import { default as addFormats } from "ajv-formats";
 
 export interface TrustValidationResult {
   ok: boolean;
