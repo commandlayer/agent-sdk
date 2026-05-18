@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
-import { Ajv, type ErrorObject } from "ajv";
+import { type ErrorObject } from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import * as addFormatsModule from "ajv-formats";
 
 export interface TrustValidationResult {
@@ -7,7 +8,7 @@ export interface TrustValidationResult {
   errors: string[];
 }
 
-type AddFormats = (ajv: Ajv) => Ajv;
+type AddFormats = (ajv: Ajv2020) => Ajv2020;
 
 const addFormats = (addFormatsModule as unknown as { default?: AddFormats }).default
   ?? (addFormatsModule as unknown as AddFormats);
@@ -16,7 +17,7 @@ const _require = createRequire(import.meta.url);
 const trustRequestSchema = _require("./schemas.trust-request-v1.json") as Record<string, unknown>;
 const trustReceiptSchema = _require("./schemas.trust-receipt-v1.json") as Record<string, unknown>;
 
-const ajv = new Ajv({ allErrors: true, strict: false });
+const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 ajv.addSchema(trustRequestSchema, "trust-request-v1");
 
