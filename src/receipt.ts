@@ -21,7 +21,22 @@ export interface ReceiptInput {
   };
 }
 
-export type Receipt = CommandLayerReceipt;
+export interface CanonicalProofEnvelope {
+  canonicalization: "json.sorted_keys.v1";
+  hash: {
+    alg: "SHA-256";
+    value: string;
+  };
+  signature: {
+    alg: "Ed25519";
+    value: string;
+    kid: string;
+  };
+}
+
+export type Receipt = ReceiptInput & {
+  proof: CanonicalProofEnvelope;
+};
 
 export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
   return {
@@ -39,11 +54,16 @@ export function canonicalPayloadFromReceiptInput(receipt: ReceiptInput) {
 export async function createReceipt(params: {
   keyId: string;
   privateKeyPem: string;
-  canonicalization: string;
+  canonicalization: "json.sorted_keys.v1";
   input: ReceiptInput;
 }): Promise<Receipt> {
-  return signCommandLayerReceipt(params.input, {
-    privateKeyPem: params.privateKeyPem,
-    kid: params.keyId,
-  });
+  const signed = signCommandLayerReceipt(
+    params.input as unknown as CommandLayerReceipt,
+    {
+      privateKeyPem: params.privateKeyPem,
+      kid: params.keyId,
+    },
+  );
+
+  return signed as unknown as Receipt;
 }
