@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { type ErrorObject } from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv/dist/2020.js";
 import * as addFormatsModule from "ajv-formats";
 
 export interface TrustValidationResult {
