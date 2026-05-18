@@ -17,6 +17,7 @@ export interface CommandLayerConfig {
 }
 
 export const DEFAULT_VERIFIER_URL = "https://runtime.commandlayer.org/verify";
+export const DEFAULT_CANONICALIZATION = "json.sorted_keys.v1";
 
 export const TRUST_FAMILY = "trust-verification" as const;
 export const TRUST_VERSION = "1.0.0" as const;
@@ -97,11 +98,18 @@ export class CommandLayer {
       throw new Error("Missing privateKeyPem (or deprecated privateKey alias)");
     }
 
+    const canonicalization = config.canonicalization ?? DEFAULT_CANONICALIZATION;
+    if (canonicalization !== DEFAULT_CANONICALIZATION) {
+      throw new Error(
+        `Unsupported canonicalization \"${canonicalization}\". Only \"${DEFAULT_CANONICALIZATION}\" is supported.`,
+      );
+    }
+
     this.config = {
       ...config,
       signer,
       privateKeyPem,
-      canonicalization: config.canonicalization ?? "json.sorted_keys.v1",
+      canonicalization,
       verifierUrl: config.verifierUrl ?? DEFAULT_VERIFIER_URL,
     };
 

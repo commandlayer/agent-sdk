@@ -19,6 +19,12 @@ async function generateKeyPair(): Promise<{ pem: string; publicKey: CryptoKey }>
   return { pem: toPem(pkcs8), publicKey: keyPair.publicKey };
 }
 
+function toSpkiPem(spki: ArrayBuffer): string {
+  const b64 = Buffer.from(spki).toString("base64");
+  const lines = b64.match(/.{1,64}/g)?.join("\n") ?? b64;
+  return `-----BEGIN PUBLIC KEY-----\n${lines}\n-----END PUBLIC KEY-----`;
+}
+
 async function generatePrivateKeyPem(): Promise<string> {
   return (await generateKeyPair()).pem;
 }
@@ -80,6 +86,8 @@ test("wrap rejects an unrecognized verb before running the wrapped function", as
 
 test("emitted receipt verifies with runtime-core and tampering is invalid", async () => {
   const { pem, publicKey } = await generateKeyPair();
+  const spki = await webcrypto.subtle.exportKey("spki", publicKey);
+  const publicKeyPem = toSpkiPem(spki);
 
   const cl = new CommandLayer({
     signer: "verifyagent.eth",
@@ -92,11 +100,11 @@ test("emitted receipt verifies with runtime-core and tampering is invalid", asyn
     run: async () => ({ y: 2 }),
   });
 
-  const verification = await verifyCommandLayerReceipt({ receipt });
-  assert.equal(verification.status, "VALID");
+  const verification = await verifyCommandLayerReceipt(receipt, { publicKeyPemOrDer: publicKeyPem });
+  assert.equal(verification.status, "VERIFIED");
 
   const tampered = { ...receipt, output: { y: 99 } };
-  const tamperedVerification = await verifyCommandLayerReceipt({ receipt: tampered });
+  const tamperedVerification = await verifyCommandLayerReceipt(tampered, { publicKeyPemOrDer: publicKeyPem });
   assert.equal(tamperedVerification.status, "INVALID");
 });
 
