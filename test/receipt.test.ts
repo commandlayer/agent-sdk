@@ -45,11 +45,11 @@ test("wrapping an action creates a receipt with required fields", async () => {
   assert.equal(result.receipt.version, "1.0.0");
   assert.equal(result.receipt.family, "trust-verification");
   assert.equal(result.receipt.verb, "verify");
-  assert.equal(result.receipt.proof.canonicalization, "json.sorted_keys.v1");
-  assert.equal(result.receipt.proof.hash.alg, "SHA-256");
-  assert.equal(result.receipt.proof.signature.alg, "Ed25519");
-  assert.ok(result.receipt.proof.signature.value.length > 0);
-  assert.equal(result.receipt.proof.signature.kid, "vC4WbcNoq2znSCiQ");
+  assert.equal(result.receipt.metadata.proof.canonicalization, "json.sorted_keys.v1");
+  assert.equal(result.receipt.metadata.proof.hash.alg, "SHA-256");
+  assert.equal(result.receipt.metadata.proof.signature.alg, "Ed25519");
+  assert.ok(result.receipt.metadata.proof.signature.value.length > 0);
+  assert.equal(result.receipt.metadata.proof.signature.kid, "vC4WbcNoq2znSCiQ");
   assert.equal((result.receipt as unknown as Record<string, unknown>).signature_b64, undefined);
   assert.ok(result.receipt.execution.started_at);
   assert.ok(result.receipt.execution.completed_at);
@@ -124,8 +124,8 @@ test("wrap returns signed error receipt when wrapped agent throws", async () => 
 
   assert.equal(result.receipt.execution.status, "error");
   assert.match(result.receipt.execution.error ?? "", /simulated failure/);
-  assert.ok(result.receipt.proof.signature.value);
-  assert.equal(result.receipt.proof.signature.alg, "Ed25519");
+  assert.ok(result.receipt.metadata.proof.signature.value);
+  assert.equal(result.receipt.metadata.proof.signature.alg, "Ed25519");
 });
 
 test("error receipt is also schema-valid", async () => {

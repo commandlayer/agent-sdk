@@ -75,7 +75,7 @@ test("invalid receipt fails", async () => {
     input: makeValidTrustRequest(),
   });
 
-  const result = validateTrustReceipt({ ...receipt, proof: { ...receipt.proof, signature: { ...receipt.proof.signature, alg: "RSA" } } });
+  const result = validateTrustReceipt({ ...receipt, metadata: { ...receipt.metadata, proof: { ...receipt.metadata.proof, signature: { ...receipt.metadata.proof.signature, alg: "RSA" } } } });
   assert.equal(result.ok, false);
   assert.ok(result.errors.length > 0);
 });
@@ -91,7 +91,7 @@ test("assert variants throw", async () => {
   });
 
   assert.throws(
-    () => assertValidTrustReceipt({ ...receipt, proof: { ...receipt.proof, signature: { alg: "Ed25519", value: "nope", kid: "kid-1" } } }),
+    () => assertValidTrustReceipt({ ...receipt, metadata: { ...receipt.metadata, proof: { ...receipt.metadata.proof, signature: { alg: "Ed25519", value: "nope", kid: "kid-1" } } } }),
     /Invalid CLAS Trust Verification v1 receipt/,
   );
 });
@@ -120,12 +120,14 @@ test("missing receipt proof fields fails", async () => {
 
   const invalid = {
     ...receipt,
-    proof: { canonicalization: receipt.proof.canonicalization },
+    metadata: {
+      proof: { canonicalization: receipt.metadata.proof.canonicalization },
+    },
   };
 
   const result = validateTrustReceipt(invalid);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((err) => err.includes("/proof")));
+  assert.ok(result.errors.some((err) => err.includes("/metadata/proof")));
 });
 
 test("invalid canonicalization value fails", async () => {
@@ -138,9 +140,12 @@ test("invalid canonicalization value fails", async () => {
 
   const result = validateTrustReceipt({
     ...receipt,
-    proof: { ...receipt.proof, canonicalization: "json.unsorted.v1" },
+    metadata: {
+      ...receipt.metadata,
+      proof: { ...receipt.metadata.proof, canonicalization: "json.unsorted.v1" },
+    },
   });
 
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((err) => err.includes("/proof/canonical")));
+  assert.ok(result.errors.some((err) => err.includes("/metadata/proof/canonical")));
 });

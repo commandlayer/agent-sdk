@@ -12,7 +12,7 @@
     "input",
     "output",
     "execution",
-    "proof"
+    "metadata"
   ],
   "properties": {
     "version": {
@@ -80,56 +80,65 @@
         }
       }
     },
-    "proof": {
+    "metadata": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "canonicalization",
-        "hash",
-        "signature"
+        "proof"
       ],
       "properties": {
-        "canonicalization": {
-          "const": "json.sorted_keys.v1"
-        },
-        "hash": {
+        "proof": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "alg",
-            "value"
+            "canonicalization",
+            "hash",
+            "signature"
           ],
           "properties": {
-            "alg": {
-              "const": "SHA-256"
+            "canonicalization": {
+              "const": "json.sorted_keys.v1"
             },
-            "value": {
-              "type": "string",
-              "minLength": 16,
-              "pattern": "^[A-Za-z0-9+/=]+$"
-            }
-          }
-        },
-        "signature": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "alg",
-            "value",
-            "kid"
-          ],
-          "properties": {
-            "alg": {
-              "const": "Ed25519"
+            "hash": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "alg",
+                "value"
+              ],
+              "properties": {
+                "alg": {
+                  "const": "SHA-256"
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 16,
+                  "pattern": "^[A-Za-z0-9+/=]+$"
+                }
+              }
             },
-            "value": {
-              "type": "string",
-              "minLength": 16,
-              "pattern": "^[A-Za-z0-9+/=]+$"
-            },
-            "kid": {
-              "type": "string",
-              "minLength": 1
+            "signature": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "alg",
+                "value",
+                "kid"
+              ],
+              "properties": {
+                "alg": {
+                  "const": "Ed25519"
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 16,
+                  "pattern": "^[A-Za-z0-9+/=]+$"
+                },
+                "kid": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
             }
           }
         }
