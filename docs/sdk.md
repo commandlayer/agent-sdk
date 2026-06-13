@@ -96,3 +96,10 @@ When publishing agent metadata to ENS, use the TXT record keys defined in the CL
 | `agent-registration[<registry>][<agentId>]` | Agent registry record |
 
 These keys are defined in the CLAS ens-discovery spec (`commandlayer/clas`) and should be used when publishing agent metadata to ENS.
+
+## Scoped execution receipts
+
+Private settlement, public accountability.
+The agent signs execution.
+The settlement rail or payer signs settlement.
+The shared receipt_id binds both attestations without exposing stealth addresses or raw payment transaction hashes.

@@ -3,6 +3,26 @@ import type { JsonValue } from "./canonicalize.js";
 
 export { canonicalize } from "./canonicalize.js";
 export { createReceipt, canonicalPayloadFromReceiptInput, type Receipt } from "./receipt.js";
+export {
+  createExecutionReceipt,
+  signExecutionProof,
+  attachSettlementProof,
+  signSettlementProof,
+  verifyExecutionReceipt,
+  assertSafeReceipt,
+  EXECUTION_RECEIPT_SCHEMA,
+  EXECUTION_PROOF_COVERS,
+  SETTLEMENT_PROOF_COVERS,
+  type ClasExecutionReceiptV1,
+  type ClasExecutionAgent,
+  type ClasExecutionAction,
+  type ClasExecutionSettlement,
+  type ClasScopedProof,
+  type ClasExecutionProof,
+  type ClasSettlementProof,
+  type VerifyScopedExecutionReceiptResult,
+  type VerifyScopedProofResult,
+} from "./execution-receipt.js";
 export { validateTrustRequest, validateTrustReceipt, assertValidTrustRequest, assertValidTrustReceipt, type TrustValidationResult } from "./trust.js";
 
 export interface CommandLayerConfig {
