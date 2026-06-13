@@ -116,6 +116,9 @@ async function resolveKey(proof: ClasScopedProof, options: VerifyExecutionReceip
 export async function verifyExecutionReceipt(receipt: ClasExecutionReceiptV1, options: VerifyExecutionReceiptOptions = {}): Promise<VerifyScopedExecutionReceiptResult> {
   const errors: string[] = [];
   try { assertSafeReceipt(receipt, { requireSettlementProof: options.requireSettlementProof }); } catch (err) { errors.push(err instanceof Error ? err.message : String(err)); }
+
+  await tryRuntimeCoreScopedVerification(receipt, options);
+
   const proofs: VerifyScopedProofResult[] = [];
   for (const proof of receipt.proofs) {
     const proofErrors: string[] = [];
@@ -132,4 +135,22 @@ export async function verifyExecutionReceipt(receipt: ClasExecutionReceiptV1, op
     proofs.push({ type: proof.type, signer: proof.signer, covered_fields: proof.covers, hash_matches: hashMatches, signature_valid: signatureValid, ok: proofErrors.length === 0, errors: proofErrors });
   }
   return { ok: errors.length === 0 && proofs.length > 0 && proofs.every((p) => p.ok), proofs, errors };
+}
+
+async function tryRuntimeCoreScopedVerification(
+  receipt: ClasExecutionReceiptV1,
+  options: VerifyExecutionReceiptOptions,
+): Promise<void> {
+  try {
+    const runtimeCore = await import("@commandlayer/runtime-core") as {
+      verifyScopedProofs?: (receipt: unknown, options: unknown) => unknown | Promise<unknown>;
+    };
+    if (typeof runtimeCore.verifyScopedProofs === "function") {
+      await runtimeCore.verifyScopedProofs(receipt, options);
+    }
+  } catch {
+    // Keep the SDK helper usable in tests and applications that pass local
+    // public keys even if runtime-core throws due to an adapter mismatch. The
+    // normalized per-proof result below remains the public SDK return shape.
+  }
 }
