@@ -22,6 +22,7 @@ export {
   type ClasSettlementProof,
   type VerifyScopedExecutionReceiptResult,
   type VerifyScopedProofResult,
+  type SignerBoundPublicKey,
 } from "./execution-receipt.js";
 export { validateTrustRequest, validateTrustReceipt, assertValidTrustRequest, assertValidTrustReceipt, type TrustValidationResult } from "./trust.js";
 

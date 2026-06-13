@@ -35,17 +35,24 @@ export interface VerifyScopedProofResult {
   covered_fields: string[];
   hash_matches: boolean;
   signature_valid: boolean;
+  signer_identity_verified: boolean;
   ok: boolean;
   errors: string[];
 }
 export interface VerifyScopedExecutionReceiptResult { ok: boolean; proofs: VerifyScopedProofResult[]; errors: string[]; }
 export interface SignScopedProofOptions { signer: string; kid: string; privateKeyPem: string; }
+export interface SignerBoundPublicKey {
+  publicKeyPemOrDer: string | ArrayBuffer;
+  signer: string;
+}
+
 export interface VerifyExecutionReceiptOptions {
   publicKeyPem?: string;
   publicKeyPemOrDer?: string | ArrayBuffer;
-  publicKeysByKid?: Record<string, string | ArrayBuffer>;
-  resolvePublicKey?: (proof: ClasScopedProof) => Promise<string | ArrayBuffer | undefined> | string | ArrayBuffer | undefined;
+  publicKeysByKid?: Record<string, string | ArrayBuffer | SignerBoundPublicKey>;
+  resolvePublicKey?: (proof: ClasScopedProof) => Promise<string | ArrayBuffer | SignerBoundPublicKey | undefined> | string | ArrayBuffer | SignerBoundPublicKey | undefined;
   requireSettlementProof?: boolean;
+  requireSignerBinding?: boolean;
 }
 
 const subtle = webcrypto.subtle;
@@ -96,25 +103,61 @@ export async function signSettlementProof(receipt: ClasExecutionReceiptV1, optio
 }
 
 function same(a: readonly string[], b: readonly string[]): boolean { return a.length === b.length && a.every((v, i) => v === b[i]); }
+function isRawTransactionHash(value: string): boolean { return /^0x[a-fA-F0-9]{64}$/.test(value); }
+function findRawTransactionHash(value: unknown, path = "settlement"): string | undefined {
+  if (typeof value === "string") return isRawTransactionHash(value) ? path : undefined;
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i += 1) {
+      const found = findRawTransactionHash(value[i], `${path}[${i}]`);
+      if (found) return found;
+    }
+    return undefined;
+  }
+  if (value !== null && typeof value === "object") {
+    for (const [key, nested] of Object.entries(value)) {
+      const found = findRawTransactionHash(nested, `${path}.${key}`);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
 function assertProofCovers(proof: ClasScopedProof): void {
   if (proof.type === "execution" && !same(proof.covers, EXECUTION_PROOF_COVERS)) throw new Error("Execution proof must cover exactly receipt_id, verb, agent, action and must not cover settlement");
   if (proof.type === "settlement" && !same(proof.covers, SETTLEMENT_PROOF_COVERS)) throw new Error("Settlement proof must cover exactly receipt_id, settlement and must not cover action");
   if (proof.type !== "execution" && proof.type !== "settlement") throw new Error(`Unknown scoped proof type: ${(proof as { type: string }).type}`);
+  if (proof.canonicalization !== "json.sorted_keys.v1") throw new Error(`Unsupported proof canonicalization: ${proof.canonicalization}`);
+  if (proof.signature?.alg !== "Ed25519") throw new Error(`Unsupported proof signature algorithm: ${proof.signature?.alg}`);
 }
 export function assertSafeReceipt(receipt: ClasExecutionReceiptV1, options: { requireSettlementProof?: boolean } = {}): void {
+  if (receipt.clas !== "1.0") throw new Error('Invalid execution receipt clas: expected "1.0"');
+  if (receipt.schema !== EXECUTION_RECEIPT_SCHEMA) throw new Error(`Invalid execution receipt schema: expected ${EXECUTION_RECEIPT_SCHEMA}`);
   for (const proof of receipt.proofs) assertProofCovers(proof);
+  if (!receipt.settlement && receipt.proofs.some((p) => p.type === "settlement")) throw new Error("Settlement proof is present but receipt.settlement is missing");
   if (receipt.settlement) {
     if (receipt.settlement.stealth_address !== undefined) throw new Error("settlement.stealth_address must not be published");
-    if (typeof receipt.settlement.payment_ref === "string" && /^0x[a-fA-F0-9]{64}$/.test(receipt.settlement.payment_ref)) throw new Error("settlement.payment_ref must not be a raw 0x transaction hash");
+    const rawHashPath = findRawTransactionHash(receipt.settlement);
+    if (rawHashPath) throw new Error(`${rawHashPath} must not contain a raw 0x transaction hash`);
     if (options.requireSettlementProof !== false && !receipt.proofs.some((p) => p.type === "settlement")) throw new Error("Settlement is present but no settlement proof was provided");
   }
 }
 
-async function resolveKey(proof: ClasScopedProof, options: VerifyExecutionReceiptOptions): Promise<string | ArrayBuffer | undefined> {
-  return options.publicKeysByKid?.[proof.signature.kid] ?? options.publicKeyPem ?? options.publicKeyPemOrDer ?? await options.resolvePublicKey?.(proof);
+function isSignerBoundPublicKey(value: unknown): value is SignerBoundPublicKey {
+  return value !== null && typeof value === "object" && "publicKeyPemOrDer" in value && "signer" in value;
+}
+async function resolveKey(proof: ClasScopedProof, options: VerifyExecutionReceiptOptions): Promise<{ key?: string | ArrayBuffer; signerIdentityVerified: boolean; signerBindingError?: string }> {
+  const keyForKid = options.publicKeysByKid?.[proof.signature.kid];
+  const resolved = keyForKid ?? await options.resolvePublicKey?.(proof);
+  if (isSignerBoundPublicKey(resolved)) {
+    return resolved.signer === proof.signer
+      ? { key: resolved.publicKeyPemOrDer, signerIdentityVerified: true }
+      : { key: resolved.publicKeyPemOrDer, signerIdentityVerified: false, signerBindingError: `Proof signer ${proof.signer} does not match bound key signer ${resolved.signer}` };
+  }
+  if (resolved) return { key: resolved, signerIdentityVerified: false };
+  return { key: options.publicKeyPem ?? options.publicKeyPemOrDer, signerIdentityVerified: false };
 }
 export async function verifyExecutionReceipt(receipt: ClasExecutionReceiptV1, options: VerifyExecutionReceiptOptions = {}): Promise<VerifyScopedExecutionReceiptResult> {
   const errors: string[] = [];
+  const requireSignerBinding = options.requireSignerBinding ?? true;
   try { assertSafeReceipt(receipt, { requireSettlementProof: options.requireSettlementProof }); } catch (err) { errors.push(err instanceof Error ? err.message : String(err)); }
 
   await tryRuntimeCoreScopedVerification(receipt, options);
@@ -122,19 +165,31 @@ export async function verifyExecutionReceipt(receipt: ClasExecutionReceiptV1, op
   const proofs: VerifyScopedProofResult[] = [];
   for (const proof of receipt.proofs) {
     const proofErrors: string[] = [];
-    let hashMatches = false, signatureValid = false;
+    let hashMatches = false, signatureValid = false, signerIdentityVerified = false;
     try { assertProofCovers(proof); } catch (err) { proofErrors.push(err instanceof Error ? err.message : String(err)); }
     const canonical = canonicalize(coveredPayload(receipt, proof.covers) as JsonValue);
     const computedHash = await sha256Hex(canonical);
     hashMatches = proof.hash?.value === undefined || (proof.hash.alg === "SHA-256" && proof.hash.value === computedHash);
     if (!hashMatches) proofErrors.push("Proof hash does not match covered payload");
-    const publicKey = await resolveKey(proof, options);
-    if (!publicKey) proofErrors.push(`No public key available for kid ${proof.signature.kid}`);
-    else signatureValid = await subtle.verify("Ed25519", await importPublicKey(publicKey), fromB64(proof.signature.value), new TextEncoder().encode(canonical));
+    const resolvedKey = await resolveKey(proof, options);
+    signerIdentityVerified = resolvedKey.signerIdentityVerified;
+    if (resolvedKey.signerBindingError) proofErrors.push(resolvedKey.signerBindingError);
+    if (!resolvedKey.key) proofErrors.push(`No public key available for kid ${proof.signature.kid}`);
+    else {
+      try {
+        signatureValid = await subtle.verify("Ed25519", await importPublicKey(resolvedKey.key), fromB64(proof.signature.value), new TextEncoder().encode(canonical));
+      } catch (err) {
+        proofErrors.push(`Proof signature verification failed: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
     if (!signatureValid) proofErrors.push("Proof signature is invalid");
-    proofs.push({ type: proof.type, signer: proof.signer, covered_fields: proof.covers, hash_matches: hashMatches, signature_valid: signatureValid, ok: proofErrors.length === 0, errors: proofErrors });
+    if (requireSignerBinding && !signerIdentityVerified) proofErrors.push("Proof signer identity is not bound to the supplied public key");
+    proofs.push({ type: proof.type, signer: proof.signer, covered_fields: proof.covers, hash_matches: hashMatches, signature_valid: signatureValid, signer_identity_verified: signerIdentityVerified, ok: proofErrors.length === 0, errors: proofErrors });
   }
-  return { ok: errors.length === 0 && proofs.length > 0 && proofs.every((p) => p.ok), proofs, errors };
+  const executionProofs = proofs.filter((proof) => proof.type === "execution");
+  if (executionProofs.length === 0) errors.push("Missing execution proof");
+  if (executionProofs.length > 0 && !executionProofs.some((proof) => proof.ok)) errors.push("No valid execution proof verified");
+  return { ok: errors.length === 0 && executionProofs.some((proof) => proof.ok) && proofs.every((p) => p.ok), proofs, errors };
 }
 
 async function tryRuntimeCoreScopedVerification(

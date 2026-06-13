@@ -103,3 +103,6 @@ Private settlement, public accountability.
 The agent signs execution.
 The settlement rail or payer signs settlement.
 The shared receipt_id binds both attestations without exposing stealth addresses or raw payment transaction hashes.
+
+
+Signer identity note: `proof.signer` is receipt metadata and is not itself covered by the scoped signature. Generic `publicKeyPem` verification proves only that the scoped payload signature is valid for the supplied key; it does not prove the claimed signer identity. For fully trusted verification, bind signer identity through explicit signer-bound key material returned from `publicKeysByKid` or `resolvePublicKey`, or opt out deliberately with `requireSignerBinding: false` when only signature validity is needed.
